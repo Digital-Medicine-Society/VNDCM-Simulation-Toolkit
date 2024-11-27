@@ -13,7 +13,7 @@ Expain the levers of the simulation, and what those variables are in the code.
     Number of repeated assessments
     Magnitude of measurement error (as a proportion of the Poisson rate)
 
-So-called "fixed" values that can also be modified by a user for additional flexibility
+So-called "fixed" values that can also be modified by a user for additional flexibility:
     Daily latent fluctuation factor
     Method Filter
     Perception filter

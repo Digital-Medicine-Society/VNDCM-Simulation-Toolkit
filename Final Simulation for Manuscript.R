@@ -72,7 +72,7 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   #Vector representing the specific days of digital measure data to include in assessment (DHT-side only; COAs always use 7 days)
   days_to_include <- c((8-n_assess):7)
     
-  # Calculate each individual's mean digital measure response, based on which assessment days are being included in the assessment ####
+  # Calculate each individual's mean digital measure response, based on which assessment days are being included in the assessment
   if (n_assess != 1) {
     
     DHT_Means <- rowMeans(DHT_data[,7+days_to_include],na.rm = TRUE)
@@ -136,9 +136,17 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   #Generate the ClinRO data
   ClinRO_Data <- Simulate_5_7_ClinRo_IRT_Data_return_latents(thetas_bar,per_Filt_sd,N,b0,reliability)
     
-  ####               ####
+  ####    ####
   
-  #### Daily Single-item PRO ####
+  #### Generate secondary reference measure data - a Daily Single-item five-point PRO 
+  #### representing a patient's global impression of severity. ####
+  
+  # This data is generated using concepts in Griffiths, Pip et al. 
+  #“A confirmatory factor analysis approach was found to accurately estimate the reliability of transition ratings.” 
+  #Journal of clinical epidemiology vol. 141 (2022): 36-45. doi:10.1016/j.jclinepi.2021.08.029
+
+  #Set perception filter - the imperfect ability of an individual to perceive their mean latent trait value
+  #when recalling their activities during the previous seven days.
   per_filt_sd = 0.5 
   
   # Create iMIC distribution and other thresholds
@@ -150,27 +158,25 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   
   thrds<- data.frame(thrd1,thrd2,thrd3,thrd4)
    
-  #Sim the data
+  #Generate the daily PRO data
   Daily_PRO <- Sim_Daily_Single_Item_return_latents(thetas,N,thrds,per_filt_sd)
 
   
   
-
-  #Vector of days to include in assessment (DHT-side only; COAs always use 7 days)
+  #Vector representing the specific days of daily PRO measure data to include in assessment (DHT-side only; weekly COAs always use 7 days)
   days_to_include <- c(1:7)
    
-  
-  #Calc the Daily PRO mean data based on which assessment days are being included in the data collection
+  # Calculate each individual's mean daily PRO reference measure response, based on which assessment days are being included in the assessment.
   if (n_assess != 1) {
     Daily_PRO_means <- rowMeans(Daily_PRO[,7+days_to_include])
   } else {
     Daily_PRO_means <- Daily_PRO[,14]
   }
 
-  ####              ####
-  
-  # Calc the perception-filtered latent traits means based on which assessment days
-  #are being included in the data collection
+  ####    ####
+
+  # Calculate the perception-filtered latent traits means based on which assessment days
+  #are being included in the assessment
   if (n_assess != 1) {
     filtered_dPRO_latent_Means <- rowMeans(Daily_PRO[,days_to_include],na.rm = TRUE)
   } else {
@@ -178,7 +184,7 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   }
   
   
-  #Combine all generated data into data frame, rename columns and return
+  #Combine all generated data into a data frame, rename columns and return it.
   dat<-data.frame(thetas, DHT_data,filtered_DHT_latent_Means,DHT_Means,
                   thetas_bar,Weekly_PRO,ClinRO_Data,Daily_PRO,filtered_dPRO_latent_Means,
                   Daily_PRO_means,subject=c(1:N))
@@ -192,6 +198,8 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   
   return(dat)
 }
+
+#############################################################################################
 
 Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = NULL) {
   

@@ -2,7 +2,7 @@ library(ggplot2)
 library(tidySEM)
 
 #Choose data set
-data_set <- Final_Results_Run_5
+data_set <- Final_Results
   #Absolutely_Final_no_CFA_2
   #Absolutely_Final_wCRO_alpha_07
 

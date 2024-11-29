@@ -89,40 +89,51 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
     filtered_DHT_latent_Means <- DHT_data[,7]
   }
   
-  
   #### ####
   
-  #Generate the mean latent trait over the assessment period for the Weekly PROS.
-  #We're using 7 previous days in every case, no matter the number of DHT assessment days included,
-  #as this is the typical period for COAs.
+  #Generate the mean latent trait over the assessment period.
+  #This value is used in the Weekly COA data generaion. We're always using 7 days for the mean, 
+  #no matter the number of digital measure assessment days included, as this is the typical recall period for COAs.
   days_to_include <- c(1:7)
   thetas_bar <- Generate_avg_thetas(thetas,days_to_include)
-   
-  #### Main PRO Data ####
+
   
-  #Set perception filter
-  per_filt_sd = 1      #Varying this affects the strength of the day-to-day correlations
-  # THE PERCEPTION FILTER IS NOT ASSUMED TO RANDOMLY CHANGE FROM DAY TO DAY.
-  # THIS IS A 'FIXED' FILTER.
+  ####Generate the COA data ####
+  #Weekly COA data is generated using item response theory.
+
   
-  #Set the b2 parameters (the ‘middle’ location parameters)
+  #### Generate the primary reference measure data - 
+  #### a 12-item, 4-response PRO with a recall period of one week. ####
+  
+  #Set perception filter - the imperfect ability of an individual to perceive their mean latent trait value
+  #when recalling their activities during the previous seven days.
+  per_filt_sd = 1   
+    
+  #Set the difficulty threshold parameters
   b2  <- c(-1.0, -0.8, -0.8, -0.4, -0.4, 0, 0, 0.4, 0.4, 0.8, 0.8, 1.0)
+  
   #Set reliability
   reliability<-0.8
-  
+
+  #Generate the PRO data
   Weekly_PRO <-Simulate_4_12_IRT_data_return_latents(thetas_bar,per_filt_sd,N,b2,reliability)
   
-  ####          ####
+  ####    ####
   
-  #### Weekly ClinRO Data ####
-  
-  per_Filt_sd = 1 #0.5#0.25
-  
-  b0 = c(-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75) #Brought the tails in
-  # and made the transitions uniform 
+  ####Generate the secondary reference measure data - 
+  #### a 7-item, 5-response ClinRO with a recall period of one week. ####
+
+  #Set perception filter - the imperfect ability of an individual to perceive their mean latent trait value
+  #when recalling their activities during the previous seven days.
+  per_Filt_sd = 1 
+
+  #Set the difficulty threshold parameters
+  b0 = c(-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75) 
+
+  #Set reliabiity
   reliability = 0.7    
- 
-  
+
+  #Generate the ClinRO data
   ClinRO_Data <- Simulate_5_7_ClinRo_IRT_Data_return_latents(thetas_bar,per_Filt_sd,N,b0,reliability)
     
   ####               ####

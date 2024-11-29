@@ -8,28 +8,43 @@ library(parallel)
 library(rsimsum)
 #### ####
 
-#### FINAL VERSION USED FOR MANUSCRIPT. #### 
-Design_5 <- createDesign(N = c(35,100,200,1000), meas_error_mag = c(0.5,1,1.5,2),
-                         n_assess = c(1,3,5,7),missing_method = c('None', 'MNAR','MCAR'), missing_rate = c(0,0.1,0.25,0.4),
+#### This code represents the final code employed in the accompanying manuscript. ####
+#### Please see that manuscript and supplementary materials in this Toolkit for full details on the methodology employed. #### 
+
+#This simulation is conducted using the SimDesign package: https://cran.r-project.org/web/packages/SimDesign/index.html
+
+##### Create simulation design condition matrix. Conditions are:
+#N = Sample size
+#meas_error_mag = Magnitude of the measurement error in the digital measure (as a multiple of latent_effect, defined later)
+#missing_method = the digital measure data missingness method (For more details on the data missingness methods, see the manuscript supplementary materials).
+#missing_rate = Proprtion of data missingness in the digital measure data ####
+Design <- createDesign(N = c(35,100,200,1000), 
+                         meas_error_mag = c(0.5,1,1.5,2),
+                         n_assess = c(1,3,5,7),
+                         missing_method = c('None', 'MNAR','MCAR'), 
+                         missing_rate = c(0,0.1,0.25,0.4),
                          subset = !((missing_method == 'None' & missing_rate != 0) | (missing_method != 'None' & missing_rate == 0)))
 
+
+#####Data generation mechanism ####
 Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   
 
   Attach(condition)
-  #### DHT_Data ####
   
-  fluct_sd = 0.3
+  ##Generate the digital measure data ##
   
-  meth_filt_sd = 0.5
-  base_rate = 10000
-  latent_effect = 1250
+  fluct_sd = 0.3 #Daily fluctuation in an individual's latent trait. Fluctuations are Gaussian noise with this value for the SD, and mean 0.
   
-  thetas<- Generate_Daily_Thetas(N,fluct_sd)
+  meth_filt_sd = 0.5 #Method filter - Controls the ability of the digital measure to observe the latent trait. Gaussian noise with this value dor the SD and mean zero.
+  base_rate = 10000 #the hypothesized mean of the digital measure for an individual from the population with mean physical ability
+  latent_effect = 1250 #the proportional effect of an individual's latent physical ability on their expected digital measure count
+  
+  thetas<- Generate_Daily_Thetas(N,fluct_sd)  #Simulate the values of the latent trait for each individual on day one of the study
    
   DHT_raw <- Generate_DHT_Data_Full_with_filtered_thetas(thetas,N,fluct_sd,meth_filt_sd,base_rate,latent_effect,meas_error_mag)
   
-  #apply missingness condition
+  #apply data missingness condition
   if (missing_method == "MCAR") {
        
     DHT_data <- Apply_MCAR_Missing_Data_with_latents(DHT_raw,missing_rate)
@@ -366,7 +381,6 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
       "cfa1_srmr_SE" = sqrt(var(results$Aim_1_srmr,na.rm=TRUE)),
       "cfa1_srmr_acceptable_rate" = sum(results$Aim_1_srmr<0.08, na.rm=TRUE)/sum(!is.na(results$Aim_1_srmr)),
       
-      
       "rel_precision_CFA1_vs_Pearson" = 100*((sqrt(var(results$Avg,na.rm=TRUE))/sqrt(var(results$Aim_1_cor,na.rm=TRUE)))^2-1)
       
     )
@@ -376,9 +390,9 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
   
 }
 
-Final_Results_Run_5 <- runSimulation(design=Design_5, replications=10, #500,
+Final_Results_Run_5 <- runSimulation(design=Design, replications=10, #500,
                                            generate=Generate_with_latent_vals, analyse=Analyse_with_latents_additional_MLR, summarise=Summarise_with_latents_ignore_large_CFA_vals,
-                                           seed=c(86532:(86532+nrow(Design_5)-1)),
+                                           seed=c(86532:(86532+nrow(Design)-1)),
                                            save_results = TRUE,parallel = TRUE,packages = c('mirt','missMethods','lavaan'),beep=TRUE,
                                            control = list(print_RAM=FALSE), progress=FALSE
 )

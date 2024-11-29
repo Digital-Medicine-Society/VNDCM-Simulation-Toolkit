@@ -28,7 +28,7 @@ Design <- createDesign(N = c(35,100,200,1000),
 
 
 #####Data generation mechanism ####
-Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
+Generate <- function(condition,fixed_objects=NULL) {
   
 
   Attach(condition)
@@ -201,15 +201,16 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
 
 #############################################################################################
 
+#### Data analysis function ####
 Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = NULL) {
   
-  #Pearson correlation with measured variables
-  Avg <- cor(dat$DHT_Means,dat$Weekly_PRO,use="na.or.complete")
+  #Calculate Pearson correlation coefficient between the digital measure and primary reference measure data
+  PCC <- cor(dat$DHT_Means,dat$Weekly_PRO,use="na.or.complete")
   
-  #Pearson correlation with filtered latent variables
-  Avg_filtered_latents <- with(dat,cor(filtered_DHT_latent_Means,filtered_latents,use="na.or.complete"))
+  #Calculate Pearson correlation coefficient for filtered latent data for the digital measure and primary reference measure
+  PCC_filtered_latents <- with(dat,cor(filtered_DHT_latent_Means,filtered_latents,use="na.or.complete"))
   
-  #### single regressions ####
+  #### Simple Linear Regression Models ####
   
   #DHT average data against the weekly_PRO#
   wPRO_regr <- lm(DHT_Means~Weekly_PRO,data=dat)
@@ -267,7 +268,7 @@ Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = 
   
   #Scale COA data and convert to ordinal data
   dat_scaled_ordinal <- dat
-  dat_scaled_ordinal[,15:21] <- dat_scaled_ordinal[,15:21]/1000 #linear scale
+  dat_scaled_ordinal[,15:21] <- dat_scaled_ordinal[,15:21]/1000 #linear scaling
   
   dat_scaled_ordinal[,26:37] <- lapply(dat_scaled_ordinal[,26:37],factor, order=TRUE, levels=c(0,1,2,3))
   dat_scaled_ordinal[,40:46] <- lapply(dat_scaled_ordinal[,40:46],factor, order=TRUE, levels=c(0,1,2,3,4))
@@ -313,15 +314,15 @@ Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = 
       lav_fitt<-lavInspect(fitt,"std.all")
       fitt_meas <- fitmeasures(fitt)
     }
-    # ,silent=TRUE
+   
   )
   
   #### ####
   
   ret<-c(
     
-    "Avg" = Avg,
-    "Avg_filtered_latents" = Avg_filtered_latents,
+    "PCC" = PCC,
+    "PCC_filtered_latents" = PCC_filtered_latents,
     
     "wPRO_regr_R2" = wPRO_regr_R2,
     "wPRO_latent_regr_R2" =  wPRO_latent_regr_R2,
@@ -349,11 +350,11 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
   
   ret<- 
     c(
-      "mean_cor"=mean(results$Avg,na.rm=TRUE),
-      "Emp_SE_cor"=sqrt(var(results$Avg,na.rm=TRUE)),
-      "mean_filtered_latents_cor" = mean(results$Avg_filtered_latents,na.rm=TRUE),
-      "EmpSE_filtered_latents_cor" = sqrt(var(results$Avg_filtered_latents,na.rm=TRUE)),
-      "Mean_Emp_bias_cor" = mean(results$Avg - results$Avg_filtered_latents,na.rm=TRUE),
+      "mean_cor"=mean(results$PCC,na.rm=TRUE),
+      "Emp_SE_cor"=sqrt(var(results$PCC,na.rm=TRUE)),
+      "mean_filtered_latents_cor" = mean(results$PCC_filtered_latents,na.rm=TRUE),
+      "EmpSE_filtered_latents_cor" = sqrt(var(results$PCC_filtered_latents,na.rm=TRUE)),
+      "Mean_Emp_bias_cor" = mean(results$PCC - results$PCC_filtered_latents,na.rm=TRUE),
       
       "wPRO_regr_R2_Mean"=mean(results$wPRO_regr_R2,na.rm=TRUE),
       "wPRO_regr_R2_SE"=sqrt(var(results$wPRO_regr_R2,na.rm=TRUE)),
@@ -385,7 +386,7 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
       
       "cfa1_cor_Mean" = mean(results$Aim_1_cor,na.rm=TRUE),
       "cfa1_cor_SE" = sqrt(var(results$Aim_1_cor[abs(results$Aim_1_cor)<=2],na.rm=TRUE)),
-      "cfa1_Mean_Emp_bias" = mean(results$Aim_1_cor - results$Avg_filtered_latents,na.rm=TRUE),
+      "cfa1_Mean_Emp_bias" = mean(results$Aim_1_cor - results$PCC_filtered_latents,na.rm=TRUE),
       
       "cfa1_cfi_Mean" = mean(results$Aim_1_cfi,na.rm=TRUE),
       "cfa1_cfi_SE" = sqrt(var(results$Aim_1_cfi,na.rm=TRUE)),
@@ -403,7 +404,7 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
       "cfa1_srmr_SE" = sqrt(var(results$Aim_1_srmr,na.rm=TRUE)),
       "cfa1_srmr_acceptable_rate" = sum(results$Aim_1_srmr<0.08, na.rm=TRUE)/sum(!is.na(results$Aim_1_srmr)),
       
-      "rel_precision_CFA1_vs_Pearson" = 100*((sqrt(var(results$Avg,na.rm=TRUE))/sqrt(var(results$Aim_1_cor,na.rm=TRUE)))^2-1)
+      "rel_precision_CFA1_vs_Pearson" = 100*((sqrt(var(results$PCC,na.rm=TRUE))/sqrt(var(results$Aim_1_cor,na.rm=TRUE)))^2-1)
       
     )
   
@@ -412,8 +413,9 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
   
 }
 
-Final_Results <- runSimulation(design=Design, replications=10, #500,
-                                           generate=Generate_with_latent_vals, analyse=Analyse_with_latents_additional_MLR, summarise=Summarise_with_latents_ignore_large_CFA_vals,
+#### Run the simulation. ####
+Final_Results <- runSimulation(design=Design, replications=10, #10 replications to quickly test principle. For full simulation, use replications = 500.
+                                           generate=Generate, analyse=Analyse_with_latents_additional_MLR, summarise=Summarise_with_latents_ignore_large_CFA_vals,
                                            seed=c(86532:(86532+nrow(Design)-1)),
                                            save_results = TRUE,parallel = TRUE,packages = c('mirt','missMethods','lavaan'),beep=TRUE,
                                            control = list(print_RAM=FALSE), progress=FALSE

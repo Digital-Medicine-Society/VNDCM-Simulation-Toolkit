@@ -263,6 +263,23 @@ Generate_4_12_IRT_parameters <- function(b2,reliability) {
 #### ####
 
 #### Weekly ClinRO Data Gen ####
+#Yes#
+Simulate_5_7_ClinRo_IRT_Data_return_latents <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
+  n_responses <- 5
+  n_items <- 7
+  
+  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
+  
+  df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
+  
+  Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,filtered_latents)
+  
+  Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items))
+  
+  return(data.frame(filtered_latents,Full_COA_data,Weekly_ClinRO))
+}
+
+#Yes#
 Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   
   # 5-response, 7-items
@@ -302,51 +319,12 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   
 }
 
-Simulate_5_7_ClinRo_IRT_Data_Full <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
-  n_responses <- 5
-  n_items <- 7
-  
-  latent_COA<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
-  
-  df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
-  Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,latent_COA)
-  
-  Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) 
-  
-  return(cbind(Full_COA_data,Weekly_ClinRO))
-}
-
-Simulate_5_7_ClinRo_IRT_Data_return_latents <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
-  n_responses <- 5
-  n_items <- 7
-  
-  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
-  
-  df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
-  Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,filtered_latents)
-  
-  Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items))
-  
-  return(data.frame(filtered_latents,Full_COA_data,Weekly_ClinRO))
-}
-
 #### ####
 
 
 #### Daily PRO Data Gen ####
 
-Sim_Daily_Single_Item <- function(thetas, n_subj,thresholds, filter_sd) {
-  
-  filtered_thetas<-Apply_filter(thetas,filter_sd,n_subj)
-  
-  Daily_Single_Items<-sapply(filtered_thetas,Check_Thresholds,thrds=thresholds,N=n_subj)
-  
-  colnames(Daily_Single_Items) <- c('PRO_day_1','PRO_day_2','PRO_day_3','PRO_day_4','PRO_day_5','PRO_day_6','PRO_day_7')
-  
-  return(Daily_Single_Items)
-  
-}
-
+#Yes#
 Sim_Daily_Single_Item_return_latents <- function(thetas, n_subj,thresholds, filter_sd) {
   
   filtered_thetas<-Apply_filter(thetas,filter_sd,n_subj)
@@ -359,6 +337,7 @@ Sim_Daily_Single_Item_return_latents <- function(thetas, n_subj,thresholds, filt
   
 }
 
+#Yes#
 Check_Thresholds <- function(latent_thetas, thrds, N) {
   
   trt <- numeric(N)

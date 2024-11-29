@@ -16,6 +16,7 @@ library(rsimsum)
 ##### Create simulation design condition matrix. Conditions are:
 #N = Sample size
 #meas_error_mag = Magnitude of the measurement error in the digital measure (as a multiple of latent_effect, defined later)
+#n_assess = number of repeated assessments being included in the analysis
 #missing_method = the digital measure data missingness method (For more details on the data missingness methods, see the manuscript supplementary materials).
 #missing_rate = Proprtion of data missingness in the digital measure data ####
 Design <- createDesign(N = c(35,100,200,1000), 
@@ -39,12 +40,14 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
   meth_filt_sd = 0.5 #Method filter - Controls the ability of the digital measure to observe the latent trait. Gaussian noise with this value dor the SD and mean zero.
   base_rate = 10000 #the hypothesized mean of the digital measure for an individual from the population with mean physical ability
   latent_effect = 1250 #the proportional effect of an individual's latent physical ability on their expected digital measure count
+
+  #Simulate the values of the latent trait for each individual on each day of the study
+  thetas<- Generate_Daily_Thetas(N,fluct_sd) 
+
+  #Generate the digital measure data for each individual, which depend on the ability of the digital measure to observe an individual's latent trait
+  DHT_raw <- Generate_DHT_Data_Full(thetas,N,fluct_sd,meth_filt_sd,base_rate,latent_effect,meas_error_mag)
   
-  thetas<- Generate_Daily_Thetas(N,fluct_sd)  #Simulate the values of the latent trait for each individual on day one of the study
-   
-  DHT_raw <- Generate_DHT_Data_Full_with_filtered_thetas(thetas,N,fluct_sd,meth_filt_sd,base_rate,latent_effect,meas_error_mag)
-  
-  #apply data missingness condition
+  #Generate data missingness in the digital measure data
   if (missing_method == "MCAR") {
        
     DHT_data <- Apply_MCAR_Missing_Data_with_latents(DHT_raw,missing_rate)
@@ -66,10 +69,10 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
     
   }
   
-  #Vector of days to include in assessment (DHT-side only; COAs always use 7 days)
+  #Vector representing the specific days of digital measure data to include in assessment (DHT-side only; COAs always use 7 days)
   days_to_include <- c((8-n_assess):7)
     
-  # Calc the DHT_mean data based on which assessment days are being included in the data collection ####
+  # Calculate each individual's mean digital measure response, based on which assessment days are being included in the assessment ####
   if (n_assess != 1) {
     
     DHT_Means <- rowMeans(DHT_data[,7+days_to_include],na.rm = TRUE)
@@ -77,8 +80,8 @@ Generate_with_latent_vals <- function(condition,fixed_objects=NULL) {
     DHT_Means <- DHT_data[,14]
   }
   
-  # Calc the method-filtered latent traits means based on which assessment days
-  #are being included in the data collection
+  # Calculate the method-filtered latent traits means based on which assessment days
+  # are being included in the assessment
   if (n_assess != 1) {
     
     filtered_DHT_latent_Means <- rowMeans(DHT_data[,days_to_include],na.rm = TRUE)
@@ -390,7 +393,7 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
   
 }
 
-Final_Results_Run_5 <- runSimulation(design=Design, replications=10, #500,
+Final_Results <- runSimulation(design=Design, replications=10, #500,
                                            generate=Generate_with_latent_vals, analyse=Analyse_with_latents_additional_MLR, summarise=Summarise_with_latents_ignore_large_CFA_vals,
                                            seed=c(86532:(86532+nrow(Design)-1)),
                                            save_results = TRUE,parallel = TRUE,packages = c('mirt','missMethods','lavaan'),beep=TRUE,

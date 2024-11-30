@@ -1,6 +1,9 @@
 
-#### Generate latent trait values ####
-#Yes#
+#### Generate the values of the latent trait for each individual on each day of the study ####
+### n_subj: number of study participants
+### fluct_sd: Daily fluctuation in an individual's latent trait. 
+###   Fluctuations are Gaussian noise with this value for the SD, and mean 0.
+### Returns a data frame of the latent trait values for each individal over 7 consecutive days
 Generate_Daily_Thetas <- function(n_subj, fluct_sd) {
   
   #Create starting state of latent trait
@@ -31,29 +34,32 @@ Generate_Daily_Thetas <- function(n_subj, fluct_sd) {
 }
 #### ####
 
-#Yes#
-#### Multi-purpose ####
+
+### Apply a method or perception filter to each indivdual's latent trait values.
+### The filter control's the ability of the digital measure to observe the latent trait,
+### or the imperfect ability of an individual to perceive their mean latent trait value.
+### thetas: Each individual latent trait values over the 7 days of the study.
+### filter_sd: the standard deviation of the Gaussian noise inducing the method/perception filter.
+### n_subj: number of study participants
+### Returns: a data frame of method/perception filtered latent traits.
 Apply_filter <- function(thetas,filter_sd, n_subj) {
   #usable for DHT and RM data.
   #Usable for the theta_bars as well as the daily thetas. 
 
-  #Set method/perception filter
-  # THE METHOD/PERCEPTION FILTER IS NOT ASSUMED TO RANDOMLY CHANGE FROM DAY TO DAY.
-  # THIS IS A 'FIXED' FILTER.
-  # THEREFORE, THE SAME FILTER IS TO BE APPLIED EVERY DAY.
-  #filter <- rnorm(n_subj,0,filter_sd)   
-  
-   #Generate filtered latent trait
-  #filtered_thetas <- thetas + filter
-  
   return(thetas + rnorm(n_subj,0,filter_sd))
-  #return(filtered_thetas)
-  
+
 }
 
 
-#### DHT Data Gen ####
-#Yes#
+### Digital measure data generation
+### thetas: Each individual latent trait values over the 7 days of the study.
+### n_subj: number of study participants
+### fluct_sd: Daily fluctuation in an individual's latent trait. 
+### method_filter_sd: he standard deviation of the Gaussian noise inducing the digital measure method filter.
+### base_rate: the hypothesized mean of the digital measure for an individual from the population with mean physical ability
+### latent_effect: the proportional effect of an individual's latent physical ability on their expected digital measure count
+### meas_err_sd_ratio: Magnitude of the measurement error in the digital measure (as a multiple of latent_effect)
+### Returns: a data frame of the digital measure data for each individual, along with the method-filtered latent traits.
 Generate_DHT_Data_Full <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_rate,latent_effect,meas_err_sd_ratio) {
   
   filtered_thetas <- Apply_filter(thetas,method_filter_sd,n_subj)
@@ -68,8 +74,17 @@ Generate_DHT_Data_Full <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_
 }
 
 #Yes#
+### Use the method-filtered latent traits to generate a Poisson mean for each participant on each study day.
+### An indiviudal's digital measure data are drawn randomly from a Poisson distribution with corresponding Poisson mean generated here.
+### latent_thetas:  method filtered latent traits for each individual.
+### n_subj: number of study participants
+### base_rate: the hypothesized mean of the digital measure for an individual from the population with mean physical ability
+### latent_effect: the proportional effect of an individual's latent physical ability on their expected digital measure count
+### meas_err_sd_ratio: Magnitude of the measurement error in the digital measure (as a multiple of latent_effect)
+### Returns: a data frame of Poisson means for each individual on each study day.
 Generate_Poisson_Means <- function(latent_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio) {
-  
+
+  #Calculate the method filter as a multiple of latent_effect
   meas_err_sd <- meas_err_sd_ratio * latent_effect
   
 
@@ -82,7 +97,7 @@ Generate_Poisson_Means <- function(latent_thetas,n_subj,base_rate,latent_effect,
                               "day_6" = base_rate + latent_effect*latent_thetas$day_6 + rnorm(n_subj,0,meas_err_sd),
                               "day_7" = base_rate + latent_effect*latent_thetas$day_7 + rnorm(n_subj,0,meas_err_sd))
   
-  #If measurement error induces a small or negative lambda, fix it at a notional small value
+  #If measurement error induces a small or negative lambda, fix it to a notional small value
   poisson_means[poisson_means<100]=100
   
   return(poisson_means)

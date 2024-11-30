@@ -44,7 +44,7 @@ Generate <- function(condition,fixed_objects=NULL) {
   #Simulate the values of the latent trait for each individual on each day of the study
   thetas<- Generate_Daily_Thetas(N,fluct_sd) 
 
-  #Generate the digital measure data for each individual, which depend on the ability of the digital measure to observe an individual's latent trait
+  #Generate the digital measure data for each individual, which depend on the method filter, the ability of the digital measure to observe an individual's latent trait
   DHT_raw <- Generate_DHT_Data_Full(thetas,N,fluct_sd,meth_filt_sd,base_rate,latent_effect,meas_error_mag)
   
   #Generate data missingness in the digital measure data
@@ -80,7 +80,7 @@ Generate <- function(condition,fixed_objects=NULL) {
     DHT_Means <- DHT_data[,14]
   }
   
-  # Calculate the method-filtered latent traits means based on which assessment days
+  # Select the method-filtered latent traits means based on which assessment days
   # are being included in the assessment
   if (n_assess != 1) {
     

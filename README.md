@@ -45,20 +45,16 @@ Firstly, we have the parameters of the simulation: the parameters that are varie
 4) missing_method: the digital measure data missingness method
 5) missing_rate: the proportion of data missingness in the digital measure data.
 
-To modify the way these parameters are varied, edit the design condition matrix named "Design" in "Functions for Simulation Data Gen.R". (Note: when modifying the data missingness method, the design matrix only lists strings that describe the missingness method - to enact your missingness method, you will also need to add code to the if-else block that deals with data missingness.)
+To modify the way these parameters are varied, edit the design condition matrix named "Design" in "Functions for Simulation Data Gen.R". (Note: when modifying the data missingness method, the design matrix only lists strings that describe the missingness method - to enact your missingness method, you will also need to add code to the if-else block that deals with data missingness.). For further details on how these parameters control the data generation mechanism, please see the manuscript in this Toolkit, or the comments in main simulation script in this Toolkit.
 
-
-Expain the levers of the simulation, and what those variables are in the code.
-    Sample size
-    Missing data - mechanism and rate
-    Number of repeated assessments
-    Magnitude of measurement error (as a proportion of the Poisson rate)
+Further to the parameters that make up the simulation design condition matrix, there are a number of other parameters which are fixed across all simulation conditions and each repetition in the simulation. These parameters control various aspects of the digital measure and reference measure data generation. Adjusting these parameters will allow you to tailor the simulation study to your specific analyical validation scenario. A list of these parameters can be found below, in the format of variable name : description of variable. 
 
 So-called "fixed" values that can also be modified by a user for additional flexibility:
     Daily latent fluctuation factor
     Method Filter
     Perception filter
 
+For full details on how these parameterss control the simulation, please see the manuscript in this Toolkit, or the comments in main simulation script in this Toolkit.
     
 # How to use the Shiny visualization app
 

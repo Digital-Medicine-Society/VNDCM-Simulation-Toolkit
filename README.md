@@ -20,7 +20,7 @@ There are four aspects to the toolkit:
 
 There are a number of R scripts that constitute the simulation study code. These are:
 
-1) Final Simulation for Manuscript.R - This builds and runs the simulation study. The design condition matrix is created, the data generation mechanisms are created and the data is generated, the data is then analyzed using three methodologies (Pearson Correlation, Confirmatory Factor Analysis, Simple/Multiple Linear Regression), the performance measures are calculated (including empirical bias and empirical standard error), and the estimates and performance measures are collated and saved to CSV files.
+1) Final Simulation for Manuscript.R - This builds and runs the simulation study. The design condition matrix is created, the data generation mechanisms are created and the data is generated, the data is then analyzed using three methodologies (Pearson Correlation, Confirmatory Factor Analysis, Simple/Multiple Linear Regression), the performance measures are calculated (including empirical bias and empirical standard error), and the estimates and performance measures are collated, thensaved to CSV files for convenience of data manipulation. Note: results from each individual simulation condition are saved to a local location on your device, depending on your R environment working path.
 2) Functions for Simulation Data Gen.R - This is a collection of support functions for the data generation mechanisms used in the main simulation script. NOTE: THIS SCRIPT MUST BE RUN FIRST, TO LOAD KEY FUNCTIONS REQUIRED FOR THE MAIN SIMULATION SCRIPT INTO YOUR R ENVIRONMENT.
 3) Streamlined Plotting Collection.R - This produces a number of ggplots that illustrate key features of the simulation study results using the default simulation setup.
 
@@ -30,13 +30,19 @@ There are a number of R scripts that constitute the simulation study code. These
 2) Run "Final Simulation for Manuscript.R"
 3) Run "Streamlined Plotting Collection.R"
 
-Note that with the default settings, the simulation will complete only 10 replications per simulation condition. We start with 10 replication to allow you to run an intial pass of the simulation and code in a reasonable timeframe. We recommend 500 replications in order for the Monte Carlo Standard Error of the simulation to be acceptable, but note that running the full simulation with 500 replications is likely to take several hours to complete.
+Note that with the default settings, the simulation will complete only 10 replications per simulation condition. We start with 10 replication to allow you to run an initial pass of the simulation and code in a reasonable timeframe, to test the code in your enviroment and get a sense of the outputs. We recommend 500 replications in order for the Monte Carlo Standard Error of the simulation to be acceptable, but note that running the full simulation with 500 replications is likely to take several hours to complete.
+
+# How to use the Shiny visualization app
+
+1) Downloead and run "Shiny Visualization app.R"
+2) Select sample size (Note that CFA functions poorly with small sample sizes, so we advise setting N>=35
+3) Select magnitude of measurement error (as a fraction of the latent trait's effect - enter values between 0.5 and 2.0)
+4) Select data missingness rate from the drop down menu
+5) Select number of repetitions for each simulation condition (Note: large values may take a long time to run)
+6) Click "Run simulation"
+7) Summary statistics and plots of the mean empirical bias for each statistical method are displayed. To change how the plots are grouped, use the "Group By:" drop down menu
 
 
-
-Explain the files: Functions... contains a collection of helper functions that need to be loaded into your environment prior to running your sim.
-                   Final Sim... runs the simulation
-                   Collating the estimates... does what it says - it loads the final results (which are saved to a local location by dim condition) and does two things: 1) collates the estimates from each individual sim repetition into one data table, and 2) creates a summary table of e.g. mean bias by sim condition. This is useful for data manipulation.
 
 Expain the levers of the simulation, and what those variables are in the code.
     Sample size

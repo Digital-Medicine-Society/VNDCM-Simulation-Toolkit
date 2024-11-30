@@ -115,7 +115,7 @@ Generate <- function(condition,fixed_objects=NULL) {
   #Set reliability
   reliability<-0.8
 
-  #Generate the PRO data
+  #Generate the PRO data. This is a total score for each individual, scaled to a 0-100 scale
   Weekly_PRO <-Simulate_4_12_IRT_data_return_latents(thetas_bar,per_filt_sd,N,b2,reliability)
   
   ####    ####
@@ -202,7 +202,7 @@ Generate <- function(condition,fixed_objects=NULL) {
 #############################################################################################
 
 #### Data analysis function ####
-Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = NULL) {
+Analyse <- function(condition, dat, fixed_objects = NULL) {
   
   #Calculate Pearson correlation coefficient between the digital measure and primary reference measure data
   PCC <- cor(dat$DHT_Means,dat$Weekly_PRO,use="na.or.complete")
@@ -212,69 +212,84 @@ Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = 
   
   #### Simple Linear Regression Models ####
   
-  #DHT average data against the weekly_PRO#
+  #Mean digital measure data as outcome, Weekly PRO scaled total score as the predictor.
   wPRO_regr <- lm(DHT_Means~Weekly_PRO,data=dat)
-  wPRO_regr_R2 <- summary(wPRO_regr)$r.squared
-   
+  wPRO_regr_R2 <- summary(wPRO_regr)$r.squared  #Calculate r-squared statistic
+
+  #Equivalent model for the method/perception filtered latent variables
   wPRO_latent_regr<- lm(filtered_DHT_latent_Means~filtered_latents,data=dat)
-  wPRO_latent_regr_R2<- summary(wPRO_latent_regr)$r.squared
-  
-  #### Multiple regressions ####
-  
-  #Use mean of Daily PRO as a single variable
+  wPRO_latent_regr_R2<- summary(wPRO_latent_regr)$r.squared  #Calculate r-squared statistic
+
+ 
+  #### Multiple linear regression models ####
+  #### all models use the mean digital measure data as the outcome. ####
+
+  #Include all reference measures as predictors. Weekly COAs as scaled total scores,
+  #and weekly mean of the daily reference measures.
   regr_all <- lm(DHT_Means~Weekly_PRO+Weekly_ClinRO+Daily_PRO_means,data=dat)
   
-  #filtered latent traits, use mean of dPRO filtered latent as a single variable
+  #Equivalent model for the method/perception filtered latent variables
   regr_all_filtered_latents <- lm(filtered_DHT_latent_Means~filtered_latents+filtered_latents.1
                                   +filtered_dPRO_latent_Means,data=dat)
+
+
   
-  #Use each day of daily PRO as a separate variable
+  #As above, but each individual day of daily PRO data is included as a separate predictor.
   regr_all_daybyday <- lm(DHT_Means~Weekly_PRO+Weekly_ClinRO
                           +PRO_day_1+PRO_day_2+PRO_day_3+PRO_day_4+PRO_day_5+PRO_day_6+PRO_day_7,data=dat)
   
-  #filtered latent traits, use each day of daily PRO filtered latent as a separate variable
+  #Equivalent model for the method/perception filtered latent variables
   regr_all_filtered_latents_daybyday <- lm(filtered_DHT_latent_Means~filtered_latents+filtered_latents.1
                                            +day_1.2+day_2.2+day_3.2+day_4.2+day_5.2+day_6.2+day_7.2,data=dat)
+
+
+
   
-  #Include just the weekly COAs
+  #Include just the weekly COAs as predictors, in the same way as above, and exclude the daily PRO.
   MLR_weekly_COAs <- lm(DHT_Means~Weekly_PRO+Weekly_ClinRO,data=dat)
   
-  #filtered latent traits, include just the weekly COAs
+ #Equivalent model for the method/perception filtered latent variables
   MLR_weekly_COAs_filtered_latents <- lm(filtered_DHT_latent_Means~filtered_latents+filtered_latents.1,data=dat)
   
   
   
-  ####Calculate R-squareds ####
-  #Daily PRO as a single variable
+  ####Calculate adjusted R-squareds for the MLR models####
+  ## Daily PRO as a single variable ##
+  
   #Measured values
   all_adjR2 <- summary(regr_all)$adj.r.squared
- 
-  #filtered latents
+   #filtered latents
   all_filtered_latents_adjR2 <- summary(regr_all_filtered_latents)$adj.r.squared
+
   
-  #Each day of daily PRO as a separate variable
+  ## Each day of daily PRO as a separate variable ##
   all_daybyday_adjR2 <- summary(regr_all_daybyday)$adj.r.squared
-  
   #filtered latents
   all_filtered_latents_daybyday_adjR2 <- summary(regr_all_filtered_latents_daybyday)$adj.r.squared
-  
+
+  #Just the weekly COAs, no daily PRO
   MLR_weekly_COAs_adjR2 <- summary(MLR_weekly_COAs)$adj.r.squared
-  
+  #filtered latents
   MLR_weekly_COAs_filtered_latents_adjR2 <- summary(MLR_weekly_COAs_filtered_latents)$adj.r.squared
+  
   #### ####
   
   
-  #### CFA ####
+  #### CFA models ####
   
-  #Scale COA data and convert to ordinal data
+  #Scale COA data to match the weekly PRO scale, and convert to ordinal data.
   dat_scaled_ordinal <- dat
   dat_scaled_ordinal[,15:21] <- dat_scaled_ordinal[,15:21]/1000 #linear scaling
   
   dat_scaled_ordinal[,26:37] <- lapply(dat_scaled_ordinal[,26:37],factor, order=TRUE, levels=c(0,1,2,3))
   dat_scaled_ordinal[,40:46] <- lapply(dat_scaled_ordinal[,40:46],factor, order=TRUE, levels=c(0,1,2,3,4))
   dat_scaled_ordinal[,55:61] <- lapply(dat_scaled_ordinal[,55:61],factor, order=TRUE, levels=c(0,1,2,3,4))
+
   
-  #### Model definition ####
+  #### Model definitions ####
+  #### Two-factor mdoel with correlated factors
+  #### Digital measure data as one factor, primary reference measure (i.e., the weekly PRO) data as the other factor. ####
+  #### A different model is required based on the number of repeated assessments included from the digital measure data. ####
   
   if (condition$n_assess == 7) {
        
@@ -304,8 +319,9 @@ Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = 
   }
   
   #### ####
+
   
-  #### Fit the models ####
+  #### Fit the models. ####
   
   try(
     {
@@ -318,35 +334,45 @@ Analyse_with_latents_additional_MLR <- function(condition, dat, fixed_objects = 
   )
   
   #### ####
-  
+
+
+  #### Collate the agreement statistics from each method, and return. #### 
   ret<-c(
-    
+
+    #PCCs
     "PCC" = PCC,
     "PCC_filtered_latents" = PCC_filtered_latents,
-    
+
+    #SLR R-squareds
     "wPRO_regr_R2" = wPRO_regr_R2,
     "wPRO_latent_regr_R2" =  wPRO_latent_regr_R2,
-    
+
+    #MLR adjusted R-squareds
     "all_adjR2"=all_adjR2,
     "all_filtered_latents_adjR2" = all_filtered_latents_adjR2,
     "all_daybyday_adjR2"=all_daybyday_adjR2,
     "all_filtered_latents_daybyday_adjR2" =  all_filtered_latents_daybyday_adjR2,
     "MLR_weekly_COAs_adjR2" = MLR_weekly_COAs_adjR2,
     "MLR_weekly_COAs_filtered_latents_adjR2" = MLR_weekly_COAs_filtered_latents_adjR2,
-    
+
+    #CFA factor correlation
     "Aim_1_cor"= ifelse(exists("fitt"),lav_fitt$psi["wPRO","DM"],NA),
-    "Aim_1_cfi"=ifelse(exists("fitt"),fitt_meas["cfi"],NA),
-    "Aim_1_tli"=ifelse(exists("fitt"),fitt_meas["tli"],NA),
-    "Aim_1_rmsea"=ifelse(exists("fitt"),fitt_meas["rmsea"],NA),
-    "Aim_1_srmr"=ifelse(exists("fitt"),fitt_meas["srmr"],NA)
+
+    #CFA model fit statistics
+    "Aim_1_cfi"=ifelse(exists("fitt"),fitt_meas["cfi"],NA),  #Comparative Fit Index
+    "Aim_1_tli"=ifelse(exists("fitt"),fitt_meas["tli"],NA),  #Tucker-Lewis Index
+    "Aim_1_rmsea"=ifelse(exists("fitt"),fitt_meas["rmsea"],NA),  #Root Mean Square Error of Approximation
+    "Aim_1_srmr"=ifelse(exists("fitt"),fitt_meas["srmr"],NA)  #Standardized Root Mean Square Residual
     
-  )#,
-  
+  )
   
   return(ret)
 }
 
-Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fixed_objects = NULL) {
+#######################################################################################################
+
+#### Calculate the simulation performance measures. #####
+Summarise <- function(condition, results, fixed_objects = NULL) {
   
   ret<- 
     c(
@@ -403,7 +429,8 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
       "cfa1_srmr_Mean" = mean(results$Aim_1_srmr,na.rm=TRUE),
       "cfa1_srmr_SE" = sqrt(var(results$Aim_1_srmr,na.rm=TRUE)),
       "cfa1_srmr_acceptable_rate" = sum(results$Aim_1_srmr<0.08, na.rm=TRUE)/sum(!is.na(results$Aim_1_srmr)),
-      
+
+      #relative % increase in precision (CFA vs PCC
       "rel_precision_CFA1_vs_Pearson" = 100*((sqrt(var(results$PCC,na.rm=TRUE))/sqrt(var(results$Aim_1_cor,na.rm=TRUE)))^2-1)
       
     )
@@ -414,8 +441,11 @@ Summarise_with_latents_ignore_large_CFA_vals <- function(condition, results, fix
 }
 
 #### Run the simulation. ####
-Final_Results <- runSimulation(design=Design, replications=10, #10 replications to quickly test principle. For full simulation, use replications = 500.
-                                           generate=Generate, analyse=Analyse_with_latents_additional_MLR, summarise=Summarise_with_latents_ignore_large_CFA_vals,
+#### Refer to the simDesign package for more details on the runSimulation function.
+#### 10 replications to quickly test the principle. For full simulation, use replications = 500. 
+#### Note that 500 replications will take several hours at least, depending on the processing power of your machine.
+Final_Results <- runSimulation(design=Design, replications=10, 
+                                           generate=Generate, analyse=Analyse, summarise=Summarise,
                                            seed=c(86532:(86532+nrow(Design)-1)),
                                            save_results = TRUE,parallel = TRUE,packages = c('mirt','missMethods','lavaan'),beep=TRUE,
                                            control = list(print_RAM=FALSE), progress=FALSE

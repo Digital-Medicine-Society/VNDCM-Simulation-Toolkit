@@ -10,7 +10,16 @@ library(parallel)
 library(rsimsum)
 
 
-#### Generate latent trait values ####
+#### Load the necessary functions for data generations.
+#### These are identical to the contents of the Toolkit file: 
+#### "Functions for Simulation Data Gen.R"
+
+
+#### Generate the values of the latent trait for each individual on each day of the study ####
+### n_subj: number of study participants
+### fluct_sd: Daily fluctuation in an individual's latent trait. 
+###   Fluctuations are Gaussian noise with this value for the SD, and mean 0.
+### Returns a data frame of the latent trait values for each individal over 7 consecutive days
 Generate_Daily_Thetas <- function(n_subj, fluct_sd) {
   
   #Create starting state of latent trait
@@ -36,22 +45,68 @@ Generate_Daily_Thetas <- function(n_subj, fluct_sd) {
   day_7 <- day_6 + rnorm(n_subj,0,fluct_sd)
   day_7 <- scale(day_7)
   
-  #thetas <- data.frame(day_1,day_2,day_3,day_4,day_5,day_6,day_7)
-  
-  #plot(thetas$day_1)
   return(data.frame(day_1,day_2,day_3,day_4,day_5,day_6,day_7))
-  #return(thetas)
   
 }
 #### ####
 
-#### DHT Data Gen ####
 
-Generate_Poisson_Means <- function(latent_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio) {
+### Apply a method or perception filter to each indivdual's latent trait values.
+### The filter control's the ability of the digital measure to observe the latent trait,
+### or the imperfect ability of an individual to perceive their mean latent trait value.
+### thetas: Each individual latent trait values over the 7 days of the study.
+### filter_sd: the standard deviation of the Gaussian noise inducing the method/perception filter.
+### n_subj: number of study participants
+### Returns: a data frame of method/perception filtered latent traits.
+Apply_filter <- function(thetas,filter_sd, n_subj) {
+  #usable for DHT and RM data.
+  #Usable for the theta_bars as well as the daily thetas. 
+
+  return(thetas + rnorm(n_subj,0,filter_sd))
+
+}
+
+
+### Digital measure data generation
+### thetas: Each individual latent trait values over the 7 days of the study.
+### n_subj: number of study participants
+### fluct_sd: Daily fluctuation in an individual's latent trait. 
+### method_filter_sd: he standard deviation of the Gaussian noise inducing the digital measure method filter.
+### base_rate: the hypothesized mean of the digital measure for an individual from the population with mean physical ability
+### latent_effect: the proportional effect of an individual's latent physical ability on their expected digital measure count
+### meas_err_sd_ratio: Magnitude of the measurement error in the digital measure (as a multiple of latent_effect)
+### Returns: a data frame of the digital measure data for each individual, along with the method-filtered latent traits.
+Generate_DHT_Data_Full <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_rate,latent_effect,meas_err_sd_ratio) {
+
+  #Apply method filter
+  filtered_thetas <- Apply_filter(thetas,method_filter_sd,n_subj)
+
+  #Generate Poisson means
+  poisson_means <- Generate_Poisson_Means(filtered_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio)
+
+  #Generate digital measure data
+  Full_data <- data.frame(filtered_thetas,Generate_DHT_Data(poisson_means))
   
+  
+  return(Full_data)
+  
+}
+
+
+### Use the method-filtered latent traits to generate a Poisson mean for each participant on each study day.
+### An indiviudal's digital measure data are drawn randomly from a Poisson distribution with corresponding Poisson mean generated here.
+### latent_thetas:  method filtered latent traits for each individual.
+### n_subj: number of study participants
+### base_rate: the hypothesized mean of the digital measure for an individual from the population with mean physical ability
+### latent_effect: the proportional effect of an individual's latent physical ability on their expected digital measure count
+### meas_err_sd_ratio: Magnitude of the measurement error in the digital measure (as a multiple of latent_effect)
+### Returns: a data frame of Poisson means for each individual on each study day.
+Generate_Poisson_Means <- function(latent_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio) {
+
+  #Calculate the method filter as a multiple of latent_effect
   meas_err_sd <- meas_err_sd_ratio * latent_effect
   
-  ########### PICK UP HERE #############
+
   #Generate daily Poisson means and store in data-frame
   poisson_means <- data.frame("day_1" = base_rate + latent_effect*latent_thetas$day_1 + rnorm(n_subj,0,meas_err_sd),
                               "day_2" = base_rate + latent_effect*latent_thetas$day_2 + rnorm(n_subj,0,meas_err_sd),
@@ -61,15 +116,20 @@ Generate_Poisson_Means <- function(latent_thetas,n_subj,base_rate,latent_effect,
                               "day_6" = base_rate + latent_effect*latent_thetas$day_6 + rnorm(n_subj,0,meas_err_sd),
                               "day_7" = base_rate + latent_effect*latent_thetas$day_7 + rnorm(n_subj,0,meas_err_sd))
   
-  #If measurement error induces a small or negative lambda, fix it at a notional small value
+  #If measurement error induces a small or negative lambda, fix it to a notional small value
   poisson_means[poisson_means<100]=100
   
   return(poisson_means)
   
 }
 
+
+### Generate the digital measure data for each individual on each day, by drawing a random value from a Poisson
+### distribution with corresponding Poisson mean.
+### poisson_means: the data frame of Poisson means for all indiviudals on all study days.
+### Returns: The digital measure data.
 Generate_DHT_Data <- function(poisson_means) {
-  
+
   #Create empty vectors
   pdht_day_1 = integer(length(poisson_means$day_1))
   pdht_day_2 = integer(length(poisson_means$day_2))
@@ -96,46 +156,28 @@ Generate_DHT_Data <- function(poisson_means) {
                          "DHT_day_5" = pdht_day_5, "DHT_day_6" = pdht_day_6,
                          "DHT_day_7" = pdht_day_7)
   
-  
+
   return(pdht_data)
   
 }
 
-Generate_DHT_Data_Full <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_rate,latent_effect,meas_err_sd_ratio) {
-  
-  latent_thetas <- Apply_filter(thetas,method_filter_sd,n_subj)
-  
-  poisson_means <- Generate_Poisson_Means(latent_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio)
-  
-  Full_data <- Generate_DHT_Data(poisson_means)
-  
-  
-  return(Full_data)
-  
-}
 
-Generate_DHT_Data_Full_with_filtered_thetas <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_rate,latent_effect,meas_err_sd_ratio) {
-  
-  filtered_thetas <- Apply_filter(thetas,method_filter_sd,n_subj)
-  
-  poisson_means <- Generate_Poisson_Means(filtered_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio)
-  
-  Full_data <- data.frame(filtered_thetas,Generate_DHT_Data(poisson_means))
-  
-  
-  return(Full_data)
-  
-}
+### Apply MCAR data missing mechanism to the digital measure data.
+### For more details on data missingness, see the Toolkit for the manuscript supplementary materials.
+### DHT_raw: the digital measure data for each individual, along with the method-filtered latent traits.
+### missing_rate: Proprtion of data missingness in the digital measure data
+### Returns: the digital measure data with data missingness applied. 
+###     (method-filtered latent traits remain in the data frame, unaffected.)
+Apply_MCAR <- function(DHT_raw,missing_rate) {
 
-Apply_MCAR_Missing_Data <- function(DHT_raw,missing_rate) {
-  
+  #Set the correct exponential distribution parameter based on missingness proprtion
   if (missing_rate==0.2) {
     
-    exp_rate <- 1/20     #1/19 #0.2 Missing data
+    exp_rate <- 1/20  
     
   } else if (missing_rate == 0.5) {
     
-    exp_rate <- 0.18    #.215 #0.5 missing data
+    exp_rate <- 0.18   
     
   } else if (missing_rate==0.1) {
     
@@ -151,61 +193,9 @@ Apply_MCAR_Missing_Data <- function(DHT_raw,missing_rate) {
     
   }
   
-  #Simulate drop out from low adherence or device failure
-  
-  exp_vals<-rexp(nrow(DHT_raw),rate=exp_rate)
-  
-  for (i in 1:nrow(DHT_raw)) {
-    if (round(exp_vals[i],0)<=7 & round(exp_vals[i],0)>=1){
-      DHT_raw[i,c(round(exp_vals[i],0):7)]=NA
-    }
-  }
-  
-  #Simulate Day 1 logistic issues
-  binom_vals<- rbinom(nrow(DHT_raw),1,missing_rate)#0.16)  #0.2 missing rate
-  
-  
-  for (i in 1:nrow(DHT_raw)) {
-    if (binom_vals[i]==1) {
-      DHT_raw[i,1] = NA
-    }
-  }
-  
-  # print(sum(is.na(DHT_raw))/(nrow(DHT_raw)*7))
-  # for (i in 1:7) {
-  # print(sum(is.na(DHT_raw)[,i])/nrow(DHT_raw))
-  # }
-  
-  return(DHT_raw)
-  
-}
-
-Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
-  
-  if (missing_rate==0.2) {
-    
-    exp_rate <- 1/20     #1/19 #0.2 Missing data
-    
-  } else if (missing_rate == 0.5) {
-    
-    exp_rate <- 0.18    #.215 #0.5 missing data
-    
-  } else if (missing_rate==0.1) {
-    
-    exp_rate<-1/42
-    
-  } else if (missing_rate==0.25) {
-    
-    exp_rate<-1/15
-    
-  } else if (missing_rate==0.4) {
-    
-    exp_rate<-1/8  
-    
-  }
-  
-  #Simulate drop out from low adherence or device failure
-  
+  #Simulate study drop-out due to low adherence or device failure, using an exponential distribution.
+  #The generated value from the exponential distribution for a given individual 
+  #indicated after which day in the trial their data should be deleted. 
   exp_vals<-rexp(nrow(DHT_raw),rate=exp_rate)
   
   for (i in 1:nrow(DHT_raw)) {
@@ -214,8 +204,9 @@ Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
     }
   }
   
-  #Simulate Day 1 logistic issues
-  binom_vals<- rbinom(nrow(DHT_raw),1,missing_rate)#0.16)  #0.2 missing rate
+  #Simulate Day 1 logistical issues for the study, e.g. postal issues
+  #Delete day 1 values completely at random using a binomial distribution.
+  binom_vals<- rbinom(nrow(DHT_raw),1,missing_rate)
   
   
   for (i in 1:nrow(DHT_raw)) {
@@ -223,92 +214,79 @@ Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
       DHT_raw[i,8] = NA
     }
   }
-  
-  # print(sum(is.na(DHT_raw))/(nrow(DHT_raw)*7))
-  # for (i in 1:7) {
-  # print(sum(is.na(DHT_raw)[,i])/nrow(DHT_raw))
-  # }
-  
+
   return(DHT_raw)
   
 }
+
 #### ####
 
-
+### Take the mean of the latent traits for each individual over the study period.
+### thetas: Each individual latent trait values over the 7 days of the study.
+### day_to_include: the number of assessment days included in the study.
+### Returns: means  of the latent traits for each individual over the study period.
 Generate_avg_thetas <-function(thetas, days_to_include) {
   
-  #theta_bar <- rowMeans(thetas)
-  
-  #theta_bar <- rowMeans(thetas[,days_to_include])
-  
   return(rowMeans(thetas[,days_to_include]))
-  #return(theta_bar)
-}
-
-#### Multi-purpose ####
-Apply_filter <- function(thetas,filter_sd, n_subj) {
-  #usable for DHT and RM data.
-  #Usable for the theta_bars as well as the daily thetas. 
-  
-  #Set method/perception filter
-  # THE METHOD/PERCEPTION FILTER IS NOT ASSUMED TO RANDOMLY CHANGE FROM DAY TO DAY.
-  # THIS IS A 'FIXED' FILTER.
-  # THEREFORE, THE SAME FILTER IS TO BE APPLIED EVERY DAY.
-  #filter <- rnorm(n_subj,0,filter_sd)   
-  
-  #Generate filtered latent trait
-  #filtered_thetas <- thetas + filter
-  
-  return(thetas + rnorm(n_subj,0,filter_sd))
-  #return(filtered_thetas)
   
 }
 
-round_df <- function(df, digits) {
-  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
-  
-  df[,nums] <- round(df[,nums], digits = digits)
-  
-  (df)
-}
+
 #### ####
 
-#### General IRT functions ####
 
-Simulate_IRT_data <- function(cf.sim,n_subj,n_responses,n_items,latent_COA) {
-  
-  a1 <- as.matrix(cf.sim[ , 1])
-  d1 <- as.matrix(cf.sim[ , -1])
-  
-  dat <- simdata(a1, d1, n_subj, itemtype="graded", Theta=latent_COA)#,returnList = TRUE)
-  dat <- as.data.frame(dat)
-  
-  #round( alpha(dat)$total$raw_alpha, 3 )   # Cronbach's alpha 
-  #Some sort of auto-check vs reliability input param?
-  #round(cor(dat),2)
-  
-  return(dat)
-  
-}
-
-#### ####
 
 
 #### Weekly PRO Data Gen ####
+###Simulate the primary reference measure data - the weekly 4-response, 12-item PRO
+###This function uses Item Response Theory.
+### thetas_bar: Weekly mean of the latent traits for each individual
+### per_filt_sd: SD of the perception filter, the imperfect ability of an individual to perceive their mean latent trait value.
+### n_subj: number of study participants
+### b2: Difficulty thresholds for the PRO
+### reliability: Reliability of the PRO
+Simulate_4_12_IRT_data_return_latents <- function(thetas_bar,per_filt_sd, n_subj,b2,reliability) {
+  n_responses <- 4
+  n_items <- 12
+
+  #Apply perception filter to latent traits
+  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd,n_subj)
+
+  #Generate the IRT parameters for this PRO
+  cf.sim<-Generate_4_12_IRT_parameters(b2,reliability)
+
+  #Generate the PRO data
+  Full_COA_data<-Simulate_IRT_data(cf.sim,n_subj,n_responses,n_items,filtered_latents)
+
+  #Scale the total score for each individual to a 0-100 scale
+  Weekly_PRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/36)
+  
+  return(data.frame(filtered_latents,Full_COA_data,Weekly_PRO))
+}
+
+### Generate the IRT parameters for the primary reference measure
 Generate_4_12_IRT_parameters <- function(b2,reliability) {
+
+  # 4-response, 12-items
+  # The b2 parameters (the ‘middle’ location parameters) consist of a series
+  # of numbers between -1 and +1. 
+  # The b1 parameters (the first location parameters) are based on b2 minus 1.
+  # The b3 parameters (the third location parameters)  are based on b2 plus 1.
+  # The a parameters are initially set at 1., then scaled to obtain a
+  # dataset with the required reliability.
   
   b1 <- b2 - 1
   b3 <- b2 + 1
-  a1 <- 1
-  
+  a1 <- 1 #a-parameter = 1 ensures the desired reliabiilty.
+
+  ## Use this if a different realibilty is desired.
   ## Adjust a-parameter to acquire the desired reliability
   #a1 <- a1 * 1.33     # Create reliability of ~0.80
   # Increasing a1 increases reliability
   
   cf.simb <- data.frame(a1,b1,b2,b3)
-  #print(cf.simb)
-  
-  # Transform b-parameters to d-parameters (mirt works with d-parameters)
+   
+  # Transform b-parameters to d-parameters (the mirt package used in the simulation needs d-parameters)
   # difficulty (b) = easiness (d) / -a
   cf.sim <- cf.simb
   colnames(cf.sim) <- c("a1","d1","d2","d3")
@@ -320,39 +298,62 @@ Generate_4_12_IRT_parameters <- function(b2,reliability) {
   
 }
 
-Simulate_4_12_IRT_data_full <- function(thetas_bar,per_filt_sd, n_subj,b2,reliability) {
-  n_responses <- 4
-  n_items <- 12
+
+#### ####
+
+#### General Item Response Theory (IRT) functions ####
+
+###Generate COA data using IRT and a supplied set of parameters.
+### cf.sim: difficulty thresholds/d-parameters
+### n_subj: number of study participants
+### n_responses: number of response option in the COA
+### n_items: number of items in the COA
+### latent_COA: Perception-filtered latent traits for each individual
+### Returns: Each individual's responses to the COA as a data frame.
+Simulate_IRT_data <- function(cf.sim,n_subj,n_responses,n_items,latent_COA) {
   
-  latent_COA<-Apply_filter(thetas_bar,per_filt_sd,n_subj)
+  a1 <- as.matrix(cf.sim[ , 1])
+  d1 <- as.matrix(cf.sim[ , -1])
+
+  #generate data using a graded response model
+  dat <- simdata(a1, d1, n_subj, itemtype="graded", Theta=latent_COA)
+  dat <- as.data.frame(dat)
   
-  cf.sim<-Generate_4_12_IRT_parameters(b2,reliability)
-  Full_COA_data<-Simulate_IRT_data(cf.sim,n_subj,n_responses,n_items,latent_COA)
-  
-  Weekly_PRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/36)
-  
-  return(cbind(Full_COA_data,Weekly_PRO))
+  return(dat)
+ 
 }
 
-Simulate_4_12_IRT_data_return_latents <- function(thetas_bar,per_filt_sd, n_subj,b2,reliability) {
-  n_responses <- 4
-  n_items <- 12
-  
-  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd,n_subj)
-  
-  cf.sim<-Generate_4_12_IRT_parameters(b2,reliability)
-  
-  Full_COA_data<-Simulate_IRT_data(cf.sim,n_subj,n_responses,n_items,filtered_latents)
-  
-  Weekly_PRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/36)
-  
-  return(data.frame(filtered_latents,Full_COA_data,Weekly_PRO))
-}
 #### ####
 
 #### Weekly ClinRO Data Gen ####
-Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
+###Simulate the secondary reference measure data - the weekly 5-response, 7-item ClinRO
+###This function uses Item Response Theory.
+### thetas_bar: Weekly mean of the latent traits for each individual
+### per_filt_sd: SD of the perception filter, the imperfect ability of an individual to perceive their mean latent trait value.
+### n_subj: number of study participants
+### b0: Difficulty thresholds for the PRO
+### reliability: Reliability of the PRO
+Simulate_5_7_ClinRo_IRT_Data_return_latents <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
+  n_responses <- 5
+  n_items <- 7
+
+  #Apply perception filter to latent traits
+  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
+
+  #Generate the IRT parameters for this PRO
+  df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
+
+  #Generate the PRO data
+  Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,filtered_latents)
+
+  #Scale the total score for each individual to a 0-100 scale
+  Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items))
   
+  return(data.frame(filtered_latents,Full_COA_data,Weekly_ClinRO))
+}
+
+
+Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   # 5-response, 7-items
   # The b2 parameters (the ‘middle’ location parameters) consist of a series
   # of numbers between -1 and +1. 
@@ -362,8 +363,8 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   # The a parameters are initially set at 1.
   # Secondarily, the a parameters are multiplied by a factor to obtain a
   # dataset with the required reliability.
-  
-  #b0 = c(-1.0, -0.6, -0.2, 0, 0.2, 0.6, 1.0)  #This is the vector used in the sim, pasted here as a comment for convenience
+
+  #b0 = c(-1.0, -0.6, -0.2, 0, 0.2, 0.6, 1.0)  #This is the vector used in the sim, repeated here for convenience
   b1 <- b0 - 1#3#1
   b2 <- b0 - 1/3#1#1/3
   b3 <- b0 + 1/3#1#1/3
@@ -371,13 +372,13 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   a1 <- 1
   
   ## Adjust a-parameter to acquire the desired reliability
-  a1 <- a1*.8 #2     #Create reliability of ~0.70
+  a1 <- a1*.8     #Create reliability of ~0.70
   # Increasing a1 increases reliability
+  # Change this if a different realibilty is desired.
   
   df.simb <- data.frame(a1,b1,b2,b3,b4)
-  #print(df.simb)
   
-  # Transform b-parameters to d-parameters (mirt works with d-parameters)
+  # Transform b-parameters to d-parameters (the mirt package used in the simulation needs d-parameters)
   # difficulty (b) = easiness (d) / -a
   df.sim <- df.simb
   colnames(df.sim) <- c("a1","d1","d2","d3","d4")
@@ -390,65 +391,39 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   
 }
 
-Simulate_5_7_ClinRo_IRT_Data_Full <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
-  n_responses <- 5
-  n_items <- 7
-  
-  latent_COA<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
-  
-  df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
-  Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,latent_COA)
-  
-  #print(round(alpha(Full_COA_data,check.keys = TRUE)$total$raw_alpha, 3))   # Cronbach's alpha
-  
-  Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/28)
-  
-  return(cbind(Full_COA_data,Weekly_ClinRO))
-}
-
-Simulate_5_7_ClinRo_IRT_Data_return_latents <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
-  n_responses <- 5
-  n_items <- 7
-  
-  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
-  
-  df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
-  Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,filtered_latents)
-  
-  Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/28)
-  
-  return(data.frame(filtered_latents,Full_COA_data,Weekly_ClinRO))
-}
-
 #### ####
 
 
 #### Daily PRO Data Gen ####
-
-Sim_Daily_Single_Item <- function(thetas, n_subj,thresholds, filter_sd) {
-  
-  filtered_thetas<-Apply_filter(thetas,filter_sd,n_subj)
-  
-  Daily_Single_Items<-sapply(filtered_thetas,Check_Thresholds,thrds=thresholds,N=n_subj)
-  
-  colnames(Daily_Single_Items) <- c('PRO_day_1','PRO_day_2','PRO_day_3','PRO_day_4','PRO_day_5','PRO_day_6','PRO_day_7')
-  
-  return(Daily_Single_Items)
-  
-}
-
+### Simulate the secondary reference measure data - the daily single item Patient Global Impression of Severity
+### This function uses ideas in Griffiths, Pip et al. “A confirmatory factor analysis approach was found to 
+### accurately estimate the reliability of transition ratings.” 
+### Journal of clinical epidemiology vol. 141 (2022): 36-45. doi:10.1016/j.jclinepi.2021.08.029
+### thetas: Each individual latent trait values over the 7 days of the study.
+### n_subj: number of study participants
+### thresholds: Thresholds at which an individual's latent trait transitions them between the response categories.
+### filter_sd: SD of the perception filter for this PRO.
 Sim_Daily_Single_Item_return_latents <- function(thetas, n_subj,thresholds, filter_sd) {
-  
+
+  #Apply perception filter to latent traits
   filtered_thetas<-Apply_filter(thetas,filter_sd,n_subj)
-  
+
+  #Generate the PRO data
   Daily_Single_Items<-sapply(filtered_thetas,Check_Thresholds,thrds=thresholds,N=n_subj)
-  
+
+  #Rename columns
   colnames(Daily_Single_Items) <- c('PRO_day_1','PRO_day_2','PRO_day_3','PRO_day_4','PRO_day_5','PRO_day_6','PRO_day_7')
-  
+
+  #Return PRO responses, alongside the percepion filtered latent traits for each individual.
   return(data.frame(filtered_thetas, Daily_Single_Items))
   
 }
 
+### Use the response threshold transitions to generate the PRO data for each individual.
+### latent_thetas: Perception-filtered latent traits
+### thrds: transition thresholds between the PRO responses
+### N: number of study participants
+### Returns: An individual's response to PRO, based on the where their perception-filtered latent trait fits in the threshold sequence.
 Check_Thresholds <- function(latent_thetas, thrds, N) {
   
   trt <- numeric(N)
@@ -461,49 +436,17 @@ Check_Thresholds <- function(latent_thetas, thrds, N) {
   
 }
 
-#### ####
-
-####Usage deprecated in favour of Apply_Filter which works for both DHT (method) and RM (Perception) filters.####
-# Apply_Method_Filter <- function(thetas,n_subj,method_filter_sd) {
-#   
-#   #Set method filter
-#   # THE METHOD FILTER IS NOT ASSUMED TO RANDOMLY CHANGE FROM DAY TO DAY.
-#   # THIS IS A 'FIXED' FILTER.
-#   # THEREFORE, THE SAME FILTER IS TO BE APPLIED EVERY DAY.
-#  
-#   method_filter = rnorm(n_subj,0,method_filter_sd)   
-#   
-#   #Generate latent trait underlying day 1,2,3,...
-#   day_1 <- thetas$day_1 + method_filter
-#   day_2 <- thetas$day_2 + method_filter
-#   day_3 <- thetas$day_3 + method_filter
-#   day_4 <- thetas$day_4 + method_filter
-#   day_5 <- thetas$day_5 + method_filter
-#   day_6 <- thetas$day_6 + method_filter
-#   day_7 <- thetas$day_7 + method_filter
-#   
-#   latent_thetas <- data.frame(day_1,day_2,day_3,day_4,day_5,day_6,day_7)
-#   
-#   return(latent_thetas)
-#   
-# }
-#### ####
-
-####No longer used, replaced by universal "Apply_filter" function #### 
-# Apply_Perception_filter <- function(thetas,filter_sd, n_subj) {
-# #usable for DHT and RM data.
-# #Usable for the theta_bars as well as the daily thetas. 
-# #Use sapply to work along the columns of a data.frame
-#    
-#   filter <- rnorm(n_subj,0,filter_sd)   
-#   
-#   #Generate filtered latent trait
-#   filtered_thetas <- thetas + filter
-#   
-#   return(filtered_thetas)
-#   
-# } 
-#### ####
+### Generic  rounding helper function
+###df: A data frame to be rounded
+### digits: number of digits to round to
+### Returns: a rounded data frame
+round_df <- function(df, digits) {
+  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+  
+  df[,nums] <- round(df[,nums], digits = digits)
+  
+  (df)
+}
 
 # Define UI
 ui <- fluidPage(

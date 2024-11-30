@@ -61,11 +61,14 @@ Apply_filter <- function(thetas,filter_sd, n_subj) {
 ### meas_err_sd_ratio: Magnitude of the measurement error in the digital measure (as a multiple of latent_effect)
 ### Returns: a data frame of the digital measure data for each individual, along with the method-filtered latent traits.
 Generate_DHT_Data_Full <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_rate,latent_effect,meas_err_sd_ratio) {
-  
+
+  #Apply method filter
   filtered_thetas <- Apply_filter(thetas,method_filter_sd,n_subj)
-  
+
+  #Generate Poisson means
   poisson_means <- Generate_Poisson_Means(filtered_thetas,n_subj,base_rate,latent_effect,meas_err_sd_ratio)
-  
+
+  #Generate digital measure data
   Full_data <- data.frame(filtered_thetas,Generate_DHT_Data(poisson_means))
   
   
@@ -143,16 +146,22 @@ Generate_DHT_Data <- function(poisson_means) {
 }
 
 
-#Yes#
-Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
-  
+### Apply MCAR data missing mechanism to the digital measure data.
+### For more details on data missingness, see the Toolkit for the manuscript supplementary materials.
+### DHT_raw: the digital measure data for each individual, along with the method-filtered latent traits.
+### missing_rate: Proprtion of data missingness in the digital measure data
+### Returns: the digital measure data with data missingness applied. 
+###     (method-filtered latent traits remain in the data frame, unaffected.)
+Apply_MCAR <- function(DHT_raw,missing_rate) {
+
+  #Set the correct exponential distribution parameter based on missingness proprtion
   if (missing_rate==0.2) {
     
-    exp_rate <- 1/20     #1/19 #0.2 Missing data
+    exp_rate <- 1/20  
     
   } else if (missing_rate == 0.5) {
     
-    exp_rate <- 0.18    #.215 #0.5 missing data
+    exp_rate <- 0.18   
     
   } else if (missing_rate==0.1) {
     
@@ -168,8 +177,9 @@ Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
     
   }
   
-  #Simulate drop out from low adherence or device failure
-  
+  #Simulate study drop-out due to low adherence or device failure, using an exponential distribution.
+  #The generated value from the exponential distribution for a given individual 
+  #indicated after which day in the trial their data should be deleted. 
   exp_vals<-rexp(nrow(DHT_raw),rate=exp_rate)
   
   for (i in 1:nrow(DHT_raw)) {
@@ -178,8 +188,9 @@ Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
     }
   }
   
-  #Simulate Day 1 logistic issues
-  binom_vals<- rbinom(nrow(DHT_raw),1,missing_rate)#0.16)  #0.2 missing rate
+  #Simulate Day 1 logistical issues for the study, e.g. postal issues
+  #Delete day 1 values completely at random using a binomial distribution.
+  binom_vals<- rbinom(nrow(DHT_raw),1,missing_rate)
   
   
   for (i in 1:nrow(DHT_raw)) {
@@ -187,19 +198,17 @@ Apply_MCAR_Missing_Data_with_latents <- function(DHT_raw,missing_rate) {
       DHT_raw[i,8] = NA
     }
   }
-  
-  # print(sum(is.na(DHT_raw))/(nrow(DHT_raw)*7))
-  # for (i in 1:7) {
-  # print(sum(is.na(DHT_raw)[,i])/nrow(DHT_raw))
-  # }
-  
+
   return(DHT_raw)
   
 }
 
 #### ####
 
-
+### Take the mean of the latent traits for each individual over the study period.
+### thetas: Each individual latent trait values over the 7 days of the study.
+### day_to_include: the number of assessment days included in the study.
+### Returns: means  of the latent traits for each individual over the study period.
 Generate_avg_thetas <-function(thetas, days_to_include) {
   
   return(rowMeans(thetas[,days_to_include]))
@@ -207,16 +216,77 @@ Generate_avg_thetas <-function(thetas, days_to_include) {
 }
 
 
-round_df <- function(df, digits) {
-  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+#### ####
+
+
+
+
+#### Weekly PRO Data Gen ####
+###Simulate the primary reference measure data - the weekly 4-response, 12-item PRO
+###This function uses Item Response Theory.
+### thetas_bar: Weekly mean of the latent traits for each individual
+### per_filt_sd: SD of the perception filter, the imperfect ability of an individual to perceive their mean latent trait value.
+### n_subj: number of study participants
+### b2: Difficulty thresholds for the PRO
+### reliability: Reliability of the PRO
+Simulate_4_12_IRT_data_return_latents <- function(thetas_bar,per_filt_sd, n_subj,b2,reliability) {
+  n_responses <- 4
+  n_items <- 12
+
+  #Apply perception filter to latent traits
+  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd,n_subj)
+
+  #Generate the IRT parameters for this PRO
+  cf.sim<-Generate_4_12_IRT_parameters(b2,reliability)
+
+  #Generate the PRO data
+  Full_COA_data<-Simulate_IRT_data(cf.sim,n_subj,n_responses,n_items,filtered_latents)
+
+  #Scale the total score for each individual to a 0-100 scale
+  Weekly_PRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/36)
   
-  df[,nums] <- round(df[,nums], digits = digits)
-  
-  (df)
+  return(data.frame(filtered_latents,Full_COA_data,Weekly_PRO))
 }
+
+
+Generate_4_12_IRT_parameters <- function(b2,reliability) {
+
+  # 4-response, 12-items
+  # The b2 parameters (the ‘middle’ location parameters) consist of a series
+  # of numbers between -1 and +1. 
+  # The b1 parameters (the first location parameters) are based on b2 minus 1.
+  # The b3 parameters (the third location parameters)  are based on b2 plus 1.
+  # The a parameters are initially set at 1., then scaled to obtain a
+  # dataset with the required reliability.
+  
+  b1 <- b2 - 1
+  b3 <- b2 + 1
+  a1 <- 1 #a-parameter = 1 ensures the desired reliabiilty.
+
+  ## Use this if a different realibilty is desired.
+  ## Adjust a-parameter to acquire the desired reliability
+  #a1 <- a1 * 1.33     # Create reliability of ~0.80
+  # Increasing a1 increases reliability
+  
+  cf.simb <- data.frame(a1,b1,b2,b3)
+   
+  # Transform b-parameters to d-parameters (the mirt package used in the simulation needs d-parameters)
+  # difficulty (b) = easiness (d) / -a
+  cf.sim <- cf.simb
+  colnames(cf.sim) <- c("a1","d1","d2","d3")
+  cf.sim$d1 <- -cf.simb$b1*cf.sim$a1
+  cf.sim$d2 <- -cf.simb$b2*cf.sim$a1
+  cf.sim$d3 <- -cf.simb$b3*cf.sim$a1
+  
+  return(cf.sim)
+  
+}
+
+
 #### ####
 
 #### General Item Response Theory (IRT) functions ####
+
 #Yes#
 Simulate_IRT_data <- function(cf.sim,n_subj,n_responses,n_items,latent_COA) {
   
@@ -232,74 +302,35 @@ Simulate_IRT_data <- function(cf.sim,n_subj,n_responses,n_items,latent_COA) {
 
 #### ####
 
-
-#### Weekly PRO Data Gen ####
-
-#Yes#
-Simulate_4_12_IRT_data_return_latents <- function(thetas_bar,per_filt_sd, n_subj,b2,reliability) {
-  n_responses <- 4
-  n_items <- 12
-  
-  filtered_latents<-Apply_filter(thetas_bar,per_filt_sd,n_subj)
-  
-  cf.sim<-Generate_4_12_IRT_parameters(b2,reliability)
-  
-  Full_COA_data<-Simulate_IRT_data(cf.sim,n_subj,n_responses,n_items,filtered_latents)
-  
-  Weekly_PRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items)) #(100/36)
-  
-  return(data.frame(filtered_latents,Full_COA_data,Weekly_PRO))
-}
-
-#Yes#
-Generate_4_12_IRT_parameters <- function(b2,reliability) {
-  
-  b1 <- b2 - 1
-  b3 <- b2 + 1
-  a1 <- 1
-  
-  ## Adjust a-parameter to acquire the desired reliability
-  #a1 <- a1 * 1.33     # Create reliability of ~0.80
-  # Increasing a1 increases reliability
-  
-  cf.simb <- data.frame(a1,b1,b2,b3)
-  #print(cf.simb)
-  
-  # Transform b-parameters to d-parameters (mirt works with d-parameters)
-  # difficulty (b) = easiness (d) / -a
-  cf.sim <- cf.simb
-  colnames(cf.sim) <- c("a1","d1","d2","d3")
-  cf.sim$d1 <- -cf.simb$b1*cf.sim$a1
-  cf.sim$d2 <- -cf.simb$b2*cf.sim$a1
-  cf.sim$d3 <- -cf.simb$b3*cf.sim$a1
-  
-  return(cf.sim)
-  
-}
-
-
-#### ####
-
 #### Weekly ClinRO Data Gen ####
-#Yes#
+###Simulate the secondary reference measure data - the weekly 5-response, 7-item ClinRO
+###This function uses Item Response Theory.
+### thetas_bar: Weekly mean of the latent traits for each individual
+### per_filt_sd: SD of the perception filter, the imperfect ability of an individual to perceive their mean latent trait value.
+### n_subj: number of study participants
+### b0: Difficulty thresholds for the PRO
+### reliability: Reliability of the PRO
 Simulate_5_7_ClinRo_IRT_Data_return_latents <- function(thetas_bar,per_filt_sd,n_subj,b0,reliability) {
   n_responses <- 5
   n_items <- 7
-  
+
+  #Apply perception filter to latent traits
   filtered_latents<-Apply_filter(thetas_bar,per_filt_sd, n_subj)
-  
+
+  #Generate the IRT parameters for this PRO
   df.sim<-Generate_5_7_ClinRO_IRT_parameters(b0,reliability)
-  
+
+  #Generate the PRO data
   Full_COA_data<-Simulate_IRT_data(df.sim,n_subj,n_responses,n_items,filtered_latents)
-  
+
+  #Scale the total score for each individual to a 0-100 scale
   Weekly_ClinRO <- rowSums(Full_COA_data)*(100/((n_responses-1)*n_items))
   
   return(data.frame(filtered_latents,Full_COA_data,Weekly_ClinRO))
 }
 
-#Yes#
+
 Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
-  
   # 5-response, 7-items
   # The b2 parameters (the ‘middle’ location parameters) consist of a series
   # of numbers between -1 and +1. 
@@ -310,7 +341,7 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   # Secondarily, the a parameters are multiplied by a factor to obtain a
   # dataset with the required reliability.
 
-  #b0 = c(-1.0, -0.6, -0.2, 0, 0.2, 0.6, 1.0)  #This is the vector used in the sim, pasted here as a comment for convenience
+  #b0 = c(-1.0, -0.6, -0.2, 0, 0.2, 0.6, 1.0)  #This is the vector used in the sim, repeated here for convenience
   b1 <- b0 - 1#3#1
   b2 <- b0 - 1/3#1#1/3
   b3 <- b0 + 1/3#1#1/3
@@ -318,13 +349,13 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   a1 <- 1
   
   ## Adjust a-parameter to acquire the desired reliability
-  a1 <- a1*.8 #2     #Create reliability of ~0.70
+  a1 <- a1*.8     #Create reliability of ~0.70
   # Increasing a1 increases reliability
+  # Change this if a different realibilty is desired.
   
   df.simb <- data.frame(a1,b1,b2,b3,b4)
-  #print(df.simb)
   
-  # Transform b-parameters to d-parameters (mirt works with d-parameters)
+  # Transform b-parameters to d-parameters (the mirt package used in the simulation needs d-parameters)
   # difficulty (b) = easiness (d) / -a
   df.sim <- df.simb
   colnames(df.sim) <- c("a1","d1","d2","d3","d4")
@@ -368,3 +399,14 @@ Check_Thresholds <- function(latent_thetas, thrds, N) {
   
 }
 
+### Generic  rounding helper function
+###df: A data frame to be rounded
+### digits: number of digits to round to
+### Returns: a rounded data frame
+round_df <- function(df, digits) {
+  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+  
+  df[,nums] <- round(df[,nums], digits = digits)
+  
+  (df)
+}

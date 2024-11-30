@@ -376,61 +376,86 @@ Summarise <- function(condition, results, fixed_objects = NULL) {
   
   ret<- 
     c(
+       ## Mean and Standard Error of PCC (observed data and filtered latent data) ##
       "mean_cor"=mean(results$PCC,na.rm=TRUE),
       "Emp_SE_cor"=sqrt(var(results$PCC,na.rm=TRUE)),
+      
       "mean_filtered_latents_cor" = mean(results$PCC_filtered_latents,na.rm=TRUE),
       "EmpSE_filtered_latents_cor" = sqrt(var(results$PCC_filtered_latents,na.rm=TRUE)),
+
+      ##  ## Mean empirical bias of PCC. ##
       "Mean_Emp_bias_cor" = mean(results$PCC - results$PCC_filtered_latents,na.rm=TRUE),
-      
+
+      ## Mean and Standard Error of the SLR model (observed data and filtered latent data) ##
       "wPRO_regr_R2_Mean"=mean(results$wPRO_regr_R2,na.rm=TRUE),
       "wPRO_regr_R2_SE"=sqrt(var(results$wPRO_regr_R2,na.rm=TRUE)),
+      
       "wPRO_latent_regr_R2_Mean"=mean(results$wPRO_latent_regr_R2,na.rm=TRUE),
       "wPRO_latent_regr_R2_SE"=sqrt(var(results$wPRO_latent_regr_R2,na.rm=TRUE)),
+
+      ## Mean empirical bias of the SLR model. ##
       "wPRO_regr_R2_Mean_Emp_Bias"= mean(results$wPRO_regr_R2 - results$wPRO_latent_regr_R2,na.rm=TRUE),
+
+
+      ## Mean and Standard Error for each MLR model (observed data and filtered latent data) ##
       
       "all_adjR2_Mean"=mean(results$all_adjR2,na.rm=TRUE),
       "all_adjR2_SE"=sqrt(var(results$all_adjR2,na.rm=TRUE)),
+      
       "all_filtered_latents_adjR2_Mean"=mean(results$all_filtered_latents_adjR2,na.rm=TRUE),
       "all_filtered_latents_adjR2_SE"=sqrt(var(results$all_filtered_latents_adjR2,na.rm=TRUE)),
-      "all_adjR2_Mean_Emp_Bias"= mean(results$all_adjR2 - results$all_filtered_latents_adjR2,na.rm=TRUE),
-      "all_adjR2_Mean_Emp_Bias_targeting_daybyday"= mean(results$all_adjR2 - results$all_filtered_latents_daybyday_adjR2,na.rm=TRUE),
-      
-      
+
+
       "all_daybyday_adjR2_Mean"=mean(results$all_daybyday_adjR2,na.rm=TRUE),
       "all_daybyday_adjR2_SE"=sqrt(var(results$all_daybyday_adjR2,na.rm=TRUE)),
+      
       "all_filtered_latents_daybyday_adjR2_Mean"=mean(results$all_filtered_latents_daybyday_adjR2,na.rm=TRUE),
       "all_filtered_latents_daybyday_adjR2_SE"=sqrt(var(results$all_filtered_latents_daybyday_adjR2,na.rm=TRUE)),
-      "all_daybyday_adjR2_Mean_Emp_Bias" = mean(results$all_daybyday_adjR2 - results$all_filtered_latents_daybyday_adjR2,na.rm=TRUE),
-      
-      
+
+
       "MLR_weekly_COAs_adjR2_Mean"=mean(results$MLR_weekly_COAs_adjR2,na.rm=TRUE),
       "MLR_weekly_COAs_adjR2_SE"=sqrt(var(results$MLR_weekly_COAs_adjR2,na.rm=TRUE)),
+      
       "MLR_weekly_COAs_filtered_latents_adjR2_Mean"=mean(results$MLR_weekly_COAs_filtered_latents_adjR2,na.rm=TRUE),
       "MLR_weekly_COAs_filtered_latents_adjR2_SE"=sqrt(var(results$MLR_weekly_COAs_filtered_latents_adjR2,na.rm=TRUE)),
+
+
+      ## Mean empirical bias of each MLR model. ##
+      "all_adjR2_Mean_Emp_Bias"= mean(results$all_adjR2 - results$all_filtered_latents_adjR2,na.rm=TRUE),
+      
+      "all_adjR2_Mean_Emp_Bias_targeting_daybyday"= mean(results$all_adjR2 - results$all_filtered_latents_daybyday_adjR2,na.rm=TRUE),   
+   
+      "all_daybyday_adjR2_Mean_Emp_Bias" = mean(results$all_daybyday_adjR2 - results$all_filtered_latents_daybyday_adjR2,na.rm=TRUE),
+      
       "MLR_weekly_COAs_adjR2_Mean_Emp_Bias" = mean(results$MLR_weekly_COAs_adjR2 - results$MLR_weekly_COAs_filtered_latents_adjR2,na.rm=TRUE),
+
       
-      
+      ## Mean, standard error, and mean empirical bias for CFA model
       "cfa1_cor_Mean" = mean(results$Aim_1_cor,na.rm=TRUE),
       "cfa1_cor_SE" = sqrt(var(results$Aim_1_cor[abs(results$Aim_1_cor)<=2],na.rm=TRUE)),
       "cfa1_Mean_Emp_bias" = mean(results$Aim_1_cor - results$PCC_filtered_latents,na.rm=TRUE),
-      
+
+      ## Mean, standard error, and rate of acceptable fit for CFI ###
       "cfa1_cfi_Mean" = mean(results$Aim_1_cfi,na.rm=TRUE),
       "cfa1_cfi_SE" = sqrt(var(results$Aim_1_cfi,na.rm=TRUE)),
       "cfa1_cfi_acceptable_rate" = sum(results$Aim_1_cfi>=0.9, na.rm = TRUE)/sum(!is.na(results$Aim_1_cfi)),   #exclude >1 cor conditions 
-      
+
+      ## Mean, standard eroor, and rate of acceptable fit for TLI ###
       "cfa1_tli_Mean" = mean(results$Aim_1_tli,na.rm=TRUE),
       "cfa1_tli_SE" = sqrt(var(results$Aim_1_tli,na.rm=TRUE)),
       "cfa1_tli_acceptable_rate" = sum(results$Aim_1_tli>=0.9, na.rm = TRUE)/sum(!is.na(results$Aim_1_tli)),
-      
+
+      ## Mean, standard eroor, and rate of acceptable fit for RMSEA ###
       "cfa1_rmsea_Mean" = mean(results$Aim_1_rmsea,na.rm=TRUE),
       "cfa1_rmsea_SE" = sqrt(var(results$Aim_1_rmsea,na.rm=TRUE)),
       "cfa1_rmsea_acceptable_rate" = sum(results$Aim_1_rmsea<0.08, na.rm=TRUE)/sum(!is.na(results$Aim_1_rmsea)),
-      
+
+      ## Mean, standard eroor, and rate of acceptable fit for SRMR ###
       "cfa1_srmr_Mean" = mean(results$Aim_1_srmr,na.rm=TRUE),
       "cfa1_srmr_SE" = sqrt(var(results$Aim_1_srmr,na.rm=TRUE)),
       "cfa1_srmr_acceptable_rate" = sum(results$Aim_1_srmr<0.08, na.rm=TRUE)/sum(!is.na(results$Aim_1_srmr)),
 
-      #relative % increase in precision (CFA vs PCC
+      #relative % increase in precision (CFA vs PCC)
       "rel_precision_CFA1_vs_Pearson" = 100*((sqrt(var(results$PCC,na.rm=TRUE))/sqrt(var(results$Aim_1_cor,na.rm=TRUE)))^2-1)
       
     )
@@ -439,6 +464,8 @@ Summarise <- function(condition, results, fixed_objects = NULL) {
   return(ret)
   
 }
+
+#####################################################################################################################
 
 #### Run the simulation. ####
 #### Refer to the simDesign package for more details on the runSimulation function.

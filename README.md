@@ -12,9 +12,10 @@ This toolkit contains a selection of tools that complement and support the Frame
 There are four aspects to the toolkit:
 
 1) R code for a simulation study of methods for analytical validation of a novel digital measure, where a digital measure that captures step count data is validated against a combination of COA-based reference measures that do not have directly comparable units to the digital measure.
-2) A Shiny app that visualizes the results of the simulation study in the code from point #1, using the default simulation setup.
-3) A manuscript concerning the results of the simulation study that was coded using point #1. This manuscript details the methodology choices and underlying ideas that the simulation study was built on, in addition to the results of the study itself. 
-4) A note on statistical methodology considerations for analytical validation studies. This note makes suggestions and recommendations for scenarios where measures do or do not have directly comparable units, builds on ideas explored in the simulation study manuscript, brings in additional validation concepts that may be familiar to investigators, and explores ideas that may bring a fresh perspective to analytical validation of digital measures.
+2) A Shiny app that visualizes the results of running the simulation study code using the default simulation setup.
+3) A manuscript concerning the results of the simulation study that results from running the simluation study code was coded using using the default setup. This manuscript details the methodology choices and underlying ideas that the simulation study was built on, in addition to the results of the study itself.
+4) The full dataset produced by running the simulation study code using the default simulation setup. This is the data that was analyzed to produce the above manuscript.
+5) A note on statistical methodology considerations for analytical validation studies. This note makes suggestions and recommendations for scenarios where measures do or do not have directly comparable units, builds on ideas explored in the simulation study manuscript, brings in additional validation concepts that may be familiar to investigators, and explores ideas that may bring a fresh perspective to analytical validation of digital measures.
 
 # Code for simulation study
 
@@ -32,16 +33,19 @@ There are a number of R scripts that constitute the simulation study code. These
 
 Note that with the default settings, the simulation will complete only 10 replications per simulation condition. We start with 10 replication to allow you to run an initial pass of the simulation and code in a reasonable timeframe, to test the code in your enviroment and get a sense of the outputs. We recommend 500 replications in order for the Monte Carlo Standard Error of the simulation to be acceptable, but note that running the full simulation with 500 replications is likely to take several hours to complete.
 
-# How to use the Shiny visualization app
+# Levers of the simulation, and modifying the simulation to fit your analytical validation scenario
 
-1) Downloead and run "Shiny Visualization app.R"
-2) Select sample size (Note that CFA functions poorly with small sample sizes, so we advise setting N>=35
-3) Select magnitude of measurement error (as a fraction of the latent trait's effect - enter values between 0.5 and 2.0)
-4) Select data missingness rate from the drop down menu
-5) Select number of repetitions for each simulation condition (Note: large values may take a long time to run)
-6) Click "Run simulation"
-7) Summary statistics and plots of the mean empirical bias for each statistical method are displayed. To change how the plots are grouped, use the "Group By:" drop down menu
+The simulation study code contains a suite of parameters that can be adjusted, to modify the simulation and allow you to investigate broader scenarios than the default scenario presented here (a digital measure capturing daily summary step count data, validated against three COA-based reference measures that do not have directly comparable units to the digital measure).
 
+Firstly, we have the parameters of the simulation: the parameters that are varied and tested in the full factorial simulation. They are listed below, in the format of variable name : description of variable. 
+
+1) N: sample size
+2) meas_error_mag: magnitude of the measurement error in the digital measure
+3) n_assess: number of repeated assessments being included in the analysis,
+4) missing_method: the digital measure data missingness method
+5) missing_rate: the proportion of data missingness in the digital measure data.
+
+To modify the way these parameters are varied, edit the design condition matrix named "Design" in "Functions for Simulation Data Gen.R". (Note: when modifying the data missingness method, the design matrix only lists strings that describe the missingness method - to enact your missingness method, you will also need to add code to the if-else block that deals with data missingness.)
 
 
 Expain the levers of the simulation, and what those variables are in the code.
@@ -54,3 +58,17 @@ So-called "fixed" values that can also be modified by a user for additional flex
     Daily latent fluctuation factor
     Method Filter
     Perception filter
+
+    
+# How to use the Shiny visualization app
+
+1) Downloead and run "Shiny Visualization app.R"
+2) Select sample size (Note that CFA functions poorly with small sample sizes, so we advise setting N>=35
+3) Select magnitude of measurement error (as a fraction of the latent trait's effect - enter values between 0.5 and 2.0)
+4) Select data missingness rate from the drop down menu
+5) Select number of repetitions for each simulation condition (Note: large values may take a long time to run)
+6) Click "Run simulation"
+7) Summary statistics and plots of the mean empirical bias for each statistical method are displayed. To change how the plots are grouped, use the "Group By:" drop down menu
+
+
+

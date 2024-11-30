@@ -248,7 +248,7 @@ Simulate_4_12_IRT_data_return_latents <- function(thetas_bar,per_filt_sd, n_subj
   return(data.frame(filtered_latents,Full_COA_data,Weekly_PRO))
 }
 
-
+### Generate the IRT parameters for the primary reference measure
 Generate_4_12_IRT_parameters <- function(b2,reliability) {
 
   # 4-response, 12-items
@@ -287,12 +287,19 @@ Generate_4_12_IRT_parameters <- function(b2,reliability) {
 
 #### General Item Response Theory (IRT) functions ####
 
-#Yes#
+###Generate COA data using IRT and a supplied set of parameters.
+### cf.sim: difficulty thresholds/d-parameters
+### n_subj: number of study participants
+### n_responses: number of response option in the COA
+### n_items: number of items in the COA
+### latent_COA: Perception-filtered latent traits for each individual
+### Returns: Each individual's responses to the COA as a data frame.
 Simulate_IRT_data <- function(cf.sim,n_subj,n_responses,n_items,latent_COA) {
   
   a1 <- as.matrix(cf.sim[ , 1])
   d1 <- as.matrix(cf.sim[ , -1])
-  
+
+  #generate data using a graded response model
   dat <- simdata(a1, d1, n_subj, itemtype="graded", Theta=latent_COA)
   dat <- as.data.frame(dat)
   
@@ -372,21 +379,35 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
 
 
 #### Daily PRO Data Gen ####
-
-#Yes#
+### Simulate the secondary reference measure data - the daily single item Patient Global Impression of Severity
+### This function uses ideas in Griffiths, Pip et al. “A confirmatory factor analysis approach was found to 
+### accurately estimate the reliability of transition ratings.” 
+### Journal of clinical epidemiology vol. 141 (2022): 36-45. doi:10.1016/j.jclinepi.2021.08.029
+### thetas: Each individual latent trait values over the 7 days of the study.
+### n_subj: number of study participants
+### thresholds: Thresholds at which an individual's latent trait transitions them between the response categories.
+### filter_sd: SD of the perception filter for this PRO.
 Sim_Daily_Single_Item_return_latents <- function(thetas, n_subj,thresholds, filter_sd) {
-  
+
+  #Apply perception filter to latent traits
   filtered_thetas<-Apply_filter(thetas,filter_sd,n_subj)
-  
+
+  #Generate the PRO data
   Daily_Single_Items<-sapply(filtered_thetas,Check_Thresholds,thrds=thresholds,N=n_subj)
-  
+
+  #Rename columns
   colnames(Daily_Single_Items) <- c('PRO_day_1','PRO_day_2','PRO_day_3','PRO_day_4','PRO_day_5','PRO_day_6','PRO_day_7')
-  
+
+  #Return PRO responses, alongside the percepion filtered latent traits for each individual.
   return(data.frame(filtered_thetas, Daily_Single_Items))
   
 }
 
-#Yes#
+### Use the response threshold transitions to generate the PRO data for each individual.
+### latent_thetas: Perception-filtered latent traits
+### thrds: transition thresholds between the PRO responses
+### N: number of study participants
+### Returns: An individual's response to PRO, based on the where their perception-filtered latent trait fits in the threshold sequence.
 Check_Thresholds <- function(latent_thetas, thrds, N) {
   
   trt <- numeric(N)

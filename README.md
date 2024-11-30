@@ -9,7 +9,7 @@ This toolkit contains a selection of tools that complement and support the Frame
 
 # Contents of the Toolkit
 
-There are four aspects to the toolkit:
+There are five aspects to the toolkit:
 
 1) R code for a simulation study of methods for analytical validation of a novel digital measure, where a digital measure that captures step count data is validated against a combination of COA-based reference measures that do not have directly comparable units to the digital measure.
 2) A Shiny app that visualizes the results of running the simulation study code using the default simulation setup.

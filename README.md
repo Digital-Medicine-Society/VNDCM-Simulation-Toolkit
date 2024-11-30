@@ -50,8 +50,8 @@ To modify the way these parameters are varied, edit the design condition matrix 
 Further to the parameters that make up the simulation design condition matrix, there are a number of other parameters which are fixed across all simulation conditions and each repetition in the simulation. These parameters control various aspects of the digital measure and reference measure data generation. Adjusting these parameters will allow you to tailor the simulation study to your specific analyical validation scenario. A list of these parameters can be found below, in the format of variable name : description of variable. 
 
 So-called "fixed" values that can also be modified by a user for additional flexibility:
-    1) fluct_sd : Controls the daily fluctuation in an individual's latent trait. Larger values increase the daily fluctuations.
-    2) meth_filt_sd : Controls the method filter, the ability of the digital measure to observe the latent trait. Larger values decrease the digital measure's observational ability.
+    1. fluct_sd : Controls the daily fluctuation in an individual's latent trait. Larger values increase the daily fluctuations.
+    2. meth_filt_sd : Controls the method filter, the ability of the digital measure to observe the latent trait. Larger values decrease the digital measure's observational ability.
     3) base_rate : the hypothesized mean of the digital measure for an individual from the population with mean physical ability. Default setting is 10000 to model step count.
     3) latent_effect : the proportional effect of an individual's latent physical ability on their expected digital measure count. Increasing this value increases the effect of being "non-average" on the digital measure data.
     4) per_filt_sd : Controls the perception filter for a given reference measure, i.e. the imperfect ability of an individual to perceive their mean latent trait value. Larger values decrease the reference measure's observational ability.

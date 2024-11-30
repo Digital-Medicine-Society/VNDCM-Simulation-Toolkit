@@ -50,7 +50,7 @@ Generate <- function(condition,fixed_objects=NULL) {
   #Generate data missingness in the digital measure data
   if (missing_method == "MCAR") {
        
-    DHT_data <- Apply_MCAR_Missing_Data_with_latents(DHT_raw,missing_rate)
+    DHT_data <- Apply_MCAR(DHT_raw,missing_rate)
      
   } else if (missing_method == "MNAR") {
         

@@ -73,7 +73,7 @@ Generate_DHT_Data_Full <- function(thetas,n_subj,fluct_sd,method_filter_sd,base_
   
 }
 
-#Yes#
+
 ### Use the method-filtered latent traits to generate a Poisson mean for each participant on each study day.
 ### An indiviudal's digital measure data are drawn randomly from a Poisson distribution with corresponding Poisson mean generated here.
 ### latent_thetas:  method filtered latent traits for each individual.
@@ -105,7 +105,10 @@ Generate_Poisson_Means <- function(latent_thetas,n_subj,base_rate,latent_effect,
 }
 
 
-#Yes#
+### Generate the digital measure data for each individual on each day, by drawing a random value from a Poisson
+### distribution with corresponding Poisson mean.
+### poisson_means: the data frame of Poisson means for all indiviudals on all study days.
+### Returns: The digital measure data.
 Generate_DHT_Data <- function(poisson_means) {
 
   #Create empty vectors

@@ -349,16 +349,16 @@ Generate_5_7_ClinRO_IRT_parameters <- function(b0, reliability) {
   # dataset with the required reliability.
 
   #b0 = c(-1.0, -0.6, -0.2, 0, 0.2, 0.6, 1.0)  #This is the vector used in the sim, repeated here for convenience
-  b1 <- b0 - 1#3#1
-  b2 <- b0 - 1/3#1#1/3
-  b3 <- b0 + 1/3#1#1/3
-  b4 <- b0 + 1#3#1
+  b1 <- b0 - 1
+  b2 <- b0 - 1/3
+  b3 <- b0 + 1/3
+  b4 <- b0 + 1
   a1 <- 1
   
   ## Adjust a-parameter to acquire the desired reliability
   a1 <- a1*.8     #Create reliability of ~0.70
   # Increasing a1 increases reliability
-  # Change this if a different realibilty is desired.
+  # Change this if a different reliabilty is desired.
   
   df.simb <- data.frame(a1,b1,b2,b3,b4)
   

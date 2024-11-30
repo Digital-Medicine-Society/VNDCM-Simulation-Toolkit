@@ -1,6 +1,4 @@
-# VNDCM-Simulation-Toolkit
-
-Welcome to the Simulation Toolkit for Digital Clinical Measure Validation.
+# Welcome to the Simulation Toolkit for Digital Clinical Measure Validation.
 
 This toolkit contains a selection of tools that complement and support the Framework For Novel Digital Clinical Measures, and allow a user to:
 

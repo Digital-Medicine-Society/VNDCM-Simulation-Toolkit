@@ -5,17 +5,17 @@ This toolkit contains a selection of tools that complement and support the Frame
 1) Investigate the performance and characteristics of a novel method for assessing agreement between measures, through a simulated analytical validation study where the measures do nt have directly comparable units.
 2) Understand how the novel method compares to established methods of assessing agreement in a simulated analytical validation study.
 3) Examine the influence of common study design factors on the estimates gathered from these methods.
-4) Experiment with factors of a realistic data generation mechanism to simulate your own novel digital measure scenarios.
+4) Experiment with factors of a realistic data generation mechanism to simulate your own novel digital clinical measure scenarios.
 
 # Contents of the Toolkit
 
 There are five aspects to the toolkit:
 
-1) R code for a simulation study of methods for analytical validation of a novel digital measure, where a digital measure that captures step count data is validated against a combination of COA-based reference measures that do not have directly comparable units to the digital measure.
+1) R code for a simulation study of methods for analytical validation of a novel digital clinical measure, where a digital clinical measure that captures step count data is validated against a combination of COA-based reference measures that do not have directly comparable units to the digital clinical measure.
 2) A Shiny app that visualizes the results of running the simulation study code using the default simulation setup.
 3) A manuscript concerning the results of the simulation study that results from running the simluation study code was coded using using the default setup. This manuscript details the methodology choices and underlying ideas that the simulation study was built on, in addition to the results of the study itself.
 4) The full dataset produced by running the simulation study code using the default simulation setup. This is the data that was analyzed to produce the above manuscript.
-5) A note on statistical methodology considerations for analytical validation studies. This note makes suggestions and recommendations for scenarios where measures do or do not have directly comparable units, builds on ideas explored in the simulation study manuscript, brings in additional validation concepts that may be familiar to investigators, and explores ideas that may bring a fresh perspective to analytical validation of digital measures.
+5) A note on statistical methodology considerations for analytical validation studies. This note makes suggestions and recommendations for scenarios where measures do or do not have directly comparable units, builds on ideas explored in the simulation study manuscript, brings in additional validation concepts that may be familiar to investigators, and explores ideas that may bring a fresh perspective to analytical validation of digital clinical measures.
 
 # Code for simulation study
 
@@ -35,24 +35,24 @@ Note that with the default settings, the simulation will complete only 10 replic
 
 # Levers of the simulation, and modifying the simulation to fit your analytical validation scenario
 
-The simulation study code contains a suite of parameters that can be adjusted, to modify the simulation and allow you to investigate broader scenarios than the default scenario presented here (a digital measure capturing daily summary step count data, validated against three COA-based reference measures that do not have directly comparable units to the digital measure).
+The simulation study code contains a suite of parameters that can be adjusted, to modify the simulation and allow you to investigate broader scenarios than the default scenario presented here (a digital clinical measure capturing daily summary step count data, validated against three COA-based reference measures that do not have directly comparable units to the digital clinical measure).
 
 Firstly, we have the parameters of the simulation: the parameters that are varied and tested in the full factorial simulation. They are listed below, in the format of variable name : description of variable. 
 
 1) N: sample size
-2) meas_error_mag: magnitude of the measurement error in the digital measure
+2) meas_error_mag: magnitude of the measurement error in the digital clinical measure
 3) n_assess: number of repeated assessments being included in the analysis,
-4) missing_method: the digital measure data missingness method
-5) missing_rate: the proportion of data missingness in the digital measure data.
+4) missing_method: the digital clinical measure data missingness method
+5) missing_rate: the proportion of data missingness in the digital clinical measure data.
 
 To modify the way these parameters are varied, edit the design condition matrix named "Design" in "Functions for Simulation Data Gen.R". (Note: when modifying the data missingness method, the design matrix only lists strings that describe the missingness method - to enact your missingness method, you will also need to add code to the if-else block that deals with data missingness.). For further details on how these parameters control the data generation mechanism, please see the manuscript in this Toolkit, or the comments in main simulation script in this Toolkit.
 
-Further to the parameters that make up the simulation design condition matrix, there are a number of other parameters which are fixed across all simulation conditions and each repetition in the simulation. These parameters control various aspects of the digital measure and reference measure data generation. Adjusting these parameters will allow you to tailor the simulation study to your specific analyical validation scenario. A list of these parameters can be found below, in the format of variable name : description of variable. 
+Further to the parameters that make up the simulation design condition matrix, there are a number of other parameters which are fixed across all simulation conditions and each repetition in the simulation. These parameters control various aspects of the digital clinical measure and reference measure data generation. Adjusting these parameters will allow you to tailor the simulation study to your specific analyical validation scenario. A list of these parameters can be found below, in the format of variable name : description of variable. 
 
 1) fluct_sd : Controls the daily fluctuation in an individual's latent trait. Larger values increase the daily fluctuations.
-2) meth_filt_sd : Controls the method filter, the ability of the digital measure to observe the latent trait. Larger values decrease the digital measure's observational ability.
-3) base_rate : the hypothesized mean of the digital measure for an individual from the population with mean physical ability. Default setting is 10000 to model step count.
-4) latent_effect : the proportional effect of an individual's latent physical ability on their expected digital measure count. Increasing this value increases the effect of being "non-average" on the digital measure data.
+2) meth_filt_sd : Controls the method filter, the ability of the digital clinical measure to observe the latent trait. Larger values decrease the digital clinical measure's observational ability.
+3) base_rate : the hypothesized mean of the digital clinical measure for an individual from the population with mean physical ability. Default setting is 10000 to model step count.
+4) latent_effect : the proportional effect of an individual's latent physical ability on their expected digital clinical measure count. Increasing this value increases the effect of being "non-average" on the digital clinical measure data.
 5) per_filt_sd : Controls the perception filter for a given reference measure, i.e. the imperfect ability of an individual to perceive their mean latent trait value. Larger values decrease the reference measure's observational ability.
 6) b0/b2 : Controls the difficulty threshold parameters for the simulated weekly recall COA data. This data is simulated using Item Response Theory, in a Graded Response model.
 7) reliability: Controls the reliability of the weekly recall COA instruments (Note: to control further parameters of the graded response models, adjust the functions "Generate_4_12_IRT_parameters" and "Generate_5_7_ClinRO_IRT_parameters" in "Functions for Simulation Data Gen.R"

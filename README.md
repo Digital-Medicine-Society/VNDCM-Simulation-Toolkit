@@ -7,6 +7,8 @@ This toolkit contains a selection of tools that complement and support the Frame
 3) Examine the influence of common study design factors on the estimates gathered from these methods.
 4) Experiment with factors of a realistic data generation mechanism to simulate your own novel digital clinical measure scenarios.
 
+STOP! Before diving into the Toolkit, do you have evidence to support that the novel digital clinical measure you are developing is meaningful? If not, please use DiMe’s Digital Measures That Matter framework to guide you in selecting and developing a measure that will be meaningful for patients before proceeding.
+
 # Contents of the Toolkit
 
 There are five aspects to the toolkit:

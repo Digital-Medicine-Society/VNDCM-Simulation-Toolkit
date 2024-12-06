@@ -62,11 +62,11 @@ Second, there several additional parameters which are fixed across all simulatio
 3) `base_rate`: The hypothesized mean of the digital clinical measure for an individual from the population with mean severity in the latent trait observed by the measure. The default setting is 10000 to model step count.
 4) `latent_effect`: The proportional effect of an individual's latent trait on their expected digital clinical measure count. Increasing this value increases the effect of being "non-average" on the digital clinical measure data.
 5) `per_filt_sd`: Controls the perception filter for a given reference measure, i.e., the imperfect ability of an individual to perceive their mean latent trait value. Larger values decrease the reference measure's observational ability.
-6) `b0/b2`: Controls the difficulty threshold parameters for the simulated weekly recall COA data. This data is simulated using Item Response Theory, in a Graded Response model.
+6) `b0/b2`: Controls the difficulty threshold parameters for the simulated weekly recall COA data. This data is simulated using Item Response Theory, in a graded response model.
 7) `reliability`: Controls the reliability of the weekly recall COA instruments. To control additional parameters of the graded response models, adjust the functions `Generate_4_12_IRT_parameters` and `Generate_5_7_ClinRO_IRT_parameters` in `Functions for Simulation Data Gen.R`.
 8) `imic/thrds`: Controls the distribution of the transition thresholds between response categories for the daily recall PRO reference measure.
      
-For full details on how these parameterss control the simulation, please see the [manuscript](https://todo) and the comments in main simulation script.
+For full details on how these parameters control the simulation, please see the [manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1) and the comments in main simulation script.
     
 ## How to use the visualization app
 

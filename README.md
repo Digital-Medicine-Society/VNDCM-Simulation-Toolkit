@@ -43,7 +43,7 @@ The simulation study code contains several parameters that can be adjusted to mo
 
 The default scenario is a digital clinical measure capturing daily summary step count data, validated against three COA-based reference measures that do not have directly comparable units to the digital clinical measure.
 
-First, consider the main simulation parameters that are varied and tested in the full factorial simulation (`parameter name`: parameter description). 
+First, consider the main simulation parameters that are varied and tested in the fully factorial simulation (`parameter name`: parameter description). 
 
 1) `N`: sample size
 2) `meas_error_mag`: magnitude of the measurement error in the digital clinical measure

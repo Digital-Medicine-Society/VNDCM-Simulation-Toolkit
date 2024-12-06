@@ -15,7 +15,7 @@ There are four components to the toolkit:
 2) An app that visualizes the results of the simulation study code using the default simulation parameters.
 3) The full dataset produced by running the simulation study code using the default simulation parameters. This is the data that was analyzed to produce the manuscript linked below.
 
-The methodology behind this toolkit is described in [this manuscript](https://todo).
+The methodology behind this toolkit is described in [this manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1).
 
 More information on this project that generated this toolkit can be accessed [on the website of the Digital Medicine Society](https://datacc.dimesociety.org/validating-novel-digital-clinical-measures/).
 

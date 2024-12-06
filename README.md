@@ -53,7 +53,7 @@ First, consider the main simulation parameters that are varied and tested in the
 
 To modify the way these parameters are varied, edit the design condition matrix named `Design` in `Functions for Simulation Data Gen.R`.
 
-> NOTE: When modifying the data missingness method, the design matrix only lists strings that describe the missingness method - to enact your missingness method, you will also need to add code to the if-else block that deals with data missingness. For further details on how these parameters control the data generation mechanism, please see the [manuscript](https://todo), and the comments in main simulation script.
+> NOTE: When modifying the data missingness method, the design matrix only lists strings that describe the missingness method - to enact your missingness method, you will also need to add code to the if-else block that deals with data missingness. For further details on how these parameters control the data generation mechanism, please see the [manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1), and the comments in main simulation script.
 
 Second, there several additional parameters which are fixed across all simulation conditions and each repetition in the simulation. These parameters control various aspects of the digital clinical measure and reference measure data generation. Adjusting these parameters will allow you to tailor the simulation study to your specific analyical validation scenario.
 

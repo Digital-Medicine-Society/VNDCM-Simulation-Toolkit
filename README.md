@@ -35,7 +35,7 @@ The toolkit contains the following R scripts:
 2) Run `Final Simulation for Manuscript.R`
 3) Run `Streamlined Plotting Collection.R`
 
-Note that with the default settings, the simulation will complete only 10 replications per simulation condition. We start with 10 replication to allow you to run an initial pass of the simulation and code in a reasonable timeframe, to test the code in your enviroment, and familiarze yourself with the outputs. We recommend 500 replications in order for the Monte Carlo Standard Error of the simulation to be acceptable, which is likely to take several hours to complete.
+Note that with the default settings, the simulation will complete only 10 replications per simulation condition. We start with 10 replications to allow you to run an initial pass of the simulation and code in a reasonable timeframe, to test the code in your enviroment, and familiarze yourself with the outputs. We recommend 500 replications in order for the Monte Carlo Standard Error of the simulation to be acceptable, which is likely to take several hours to complete.
 
 ## Parameters of the simulation, and modifying the simulation to fit your analytical validation scenario
 

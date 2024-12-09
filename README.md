@@ -9,7 +9,7 @@ This toolkit contains a selection of tools that complement and support the Frame
 
 ## Contents of the Toolkit
 
-There are four components to the toolkit:
+There are three components to the toolkit:
 
 1) R code to run a simulation study for analytical validation of a novel digital clinical measure, where a digital clinical measure that captures step count data is validated against a combination of COA-based reference measures that do not have directly comparable units to the digital clinical measure.
 2) An app that visualizes the results of the simulation study code using the default simulation parameters.

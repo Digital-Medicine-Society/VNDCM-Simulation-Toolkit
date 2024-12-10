@@ -12,7 +12,7 @@ This toolkit contains a selection of tools that complement and support the Frame
 There are three components to the toolkit:
 
 1) R code to run a simulation study for analytical validation of a novel digital clinical measure, where a digital clinical measure that captures step count data is validated against a combination of COA-based reference measures that do not have directly comparable units to the digital clinical measure.
-2) An app that visualizes the results of the simulation study code using the default simulation parameters.
+2) Code visualizes the key results of the simulation study code using the default simulation parameters.
 3) The full dataset produced by running the simulation study code using the default simulation parameters. This is the data that was analyzed to produce the manuscript linked below.
 
 The methodology behind this toolkit is described in [this manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1).
@@ -27,13 +27,13 @@ The toolkit contains the following R scripts:
 > NOTE: results from each individual simulation condition are saved to a local location on your device, depending on your R environment working path.
 2) `Functions for Simulation Data Gen.R` - This is a collection of support functions for the data generation mechanisms used in the main simulation script. 
 > IMPORTANT: This script must be run first to load key functions required for the main simulation script into your R environment.
-3) `Streamlined Plotting Collection.R` - This produces a number of ggplots that illustrate key features of the simulation study results using the default simulation parameters.
+3) `Key Simulation Visualizations.R` - This produces a number of ggplots that visualize key analysis and observations of the simulation study results.
 
 ## How to run the simulation study
 
 1) Run `Functions for Simulation Data Gen.R`
 2) Run `Final Simulation for Manuscript.R`
-3) Run `Streamlined Plotting Collection.R`
+3) Run `Key Simulation Visualizations.R`
 
 Note that with the default settings, the simulation will complete only 10 replications per simulation condition. We start with 10 replications to allow you to run an initial pass of the simulation and code in a reasonable timeframe, to test the code in your enviroment, and familiarze yourself with the outputs. We recommend 500 replications in order for the Monte Carlo Standard Error of the simulation to be acceptable, which is likely to take several hours to complete.
 
@@ -67,16 +67,6 @@ Second, there several additional parameters which are fixed across all simulatio
 8) `imic/thrds`: Controls the distribution of the transition thresholds between response categories for the daily recall PRO reference measure.
      
 For full details on how these parameters control the simulation, please see the [manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1) and the comments in main simulation script.
-    
-## How to use the visualization app
-
-1) Download and run `Visualization app.R`.
-2) Select sample size; note that CFA functions poorly with small sample sizes, so we advise setting N>=35.
-3) Select magnitude of measurement error (as a fraction of the latent trait's effect - enter values between 0.5 and 2.0).
-4) Select data missingness rate from the drop down menu.
-5) Select number of repetitions for each simulation condition; note: large values may take a long time to run.
-6) Click `Run simulation`.
-7) Summary statistics and plots of the mean empirical bias for each statistical method are displayed. To change how the plots are grouped, use the `Group By:` drop down menu.
-
+ 
 
 

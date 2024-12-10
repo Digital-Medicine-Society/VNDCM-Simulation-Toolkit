@@ -66,7 +66,7 @@ Second, there several additional parameters which are fixed across all simulatio
 7) `reliability`: Controls the reliability of the weekly recall COA instruments. To control additional parameters of the graded response models, adjust the functions `Generate_4_12_IRT_parameters` and `Generate_5_7_ClinRO_IRT_parameters` in `Functions for Simulation Data Gen.R`.
 8) `imic/thrds`: Controls the distribution of the transition thresholds between response categories for the daily recall PRO reference measure.
      
-For full details on how these parameters control the simulation, please see the [manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1) and the comments in main simulation script.
+For full details on how these parameters control the simulation, please see the [manuscript](https://www.medrxiv.org/content/10.1101/2024.11.29.24318211v1) and the comments in `Final Simulation for Manuscript.R`.
  
 
 

@@ -34,11 +34,11 @@ for (i in 2:nrow(data_set)) {
   nam <- paste("estimates_data_",i,sep="")
   
   assign(nam,with(eval(parse(text=paste("final_sim_res_",i,sep=""))),
-                  data.frame(N=rep(condition$N,nrow(results)),
-                             meas_error_mag = rep(condition$meas_error_mag,nrow(results)),
-                             n_assess=rep(condition$n_assess,nrow(results)),
-                             missing_method=rep(condition$missing_method,nrow(results)),
-                             missing_rate = rep(condition$missing_rate,nrow(results)),results))
+                  data.frame(N=rep(condition$N,nrow(Final_Results)),
+                             meas_error_mag = rep(condition$meas_error_mag,nrow(Final_Results)),
+                             n_assess=rep(condition$n_assess,nrow(Final_Results)),
+                             missing_method=rep(condition$missing_method,nrow(Final_Results)),
+                             missing_rate = rep(condition$missing_rate,nrow(Final_Results)),Final_Results))
   )
   
   collated_estimates <- rbind(collated_estimates, eval(parse(text=nam)))
